@@ -39,7 +39,7 @@ Preamp box zasila kapsułę przez żyłę Tip (rezystor pull-up R_pull = 2.2 kΩ
 
 ```
 Kapsuła → RV1(10kΩ, dzielnik napięcia, GAIN TRIM na panelu) → C_in(22µF/16V) → R_in(909Ω) → U1A (inwert. ×33, 30 dB)
-        → C_inter(22µF/16V) → R_in(909Ω) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) → TS 6.35mm
+        → C_inter(22µF/16V) → R_in(909Ω) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) ⊥ R_bleed(100kΩ→GND) → TS 6.35mm
 ```
 
 Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dzielnik R_VMID + bypass C_VMID).
@@ -66,6 +66,18 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 | Zapas napięciowy NE5532 | 3.5–6.3× margines względem sygnału w całym zakresie napięcia baterii (8.4V → 6.0V odcięcie BMS) |
 | Pasmo / stabilność | 303 kHz/stopień — 60× zapas nad wymaganym 5 kHz |
 
+**Dwie dodatkowe poprawki znalezione przy analizie polaryzacji DC kondensatorów sprzęgających:**
+1. **C_in, C_inter, C_out → kondensatory dwubiegunowe (NP/bipolar), nie standardowe elektrolityczne.**  
+   Napięcie DC po obu stronach C_in zależy od pozycji trymera RV1 (suwak może być DC powyżej lub  
+   poniżej VMID) — znak napięcia na C_in mógłby się odwrócić w zależności od ustawienia. Standardowy  
+   (polaryzowany) elektrolit groziłby pracą z odwrotną polaryzacją (zwiększony upływ, degradacja).  
+   Rozwiązanie: kondensatory NP eliminują ten problem i jednocześnie usuwają ryzyko pomyłki przy  
+   montażu (3 identyczne wartości 22µF w torze — łatwo pomylić orientację).
+2. **Dodano R_bleed = 100 kΩ z węzła wyjściowego (za C_out) do GND.**  
+   Bez niego DC po "zimnej" stronie C_out nie miałby zdefiniowanej ścieżki do masy — ryzyko trzasku  
+   ("pop") przy podłączaniu/odłączaniu kabla do interfejsu. R_bleed definiuje DC=0V, pobiera prąd ≈0  
+   (C_out blokuje DC w stanie ustalonym) — nie wpływa na sygnał ani poziom wyjściowy.
+
 ## Kosztorys (orientacyjny, do potwierdzenia cen na TME/Botland)
 
 | Komponent | Źródło | Koszt |
@@ -81,7 +93,7 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 | Koszyczek 2×18650 + moduł BMS 2S 8.4V | Botland / AliExpress | 15–25 zł |
 | Moduł ładowania TP5100 (2S) + gniazdo USB-C | Botland / AliExpress | 12–20 zł |
 | Wyłącznik ON/OFF | Botland | 3–5 zł |
-| Rezystory + kondensatory (assorted, w tym 3× 22µF/16V) | TME | 8–12 zł |
+| Rezystory + kondensatory (assorted, w tym 3× 22µF/16V dwubiegunowe NP) | TME | 10–15 zł |
 | Płytka prototypowa veroboard | Botland / Allegro | 5–8 zł |
 | Kabel TS 3.5mm (1.5m, ekranowany, do stetoskopu) | Allegro | 6–10 zł |
 | Wtyczka TS 3.5mm (na kabel głowicy) | Allegro | 2–3 zł |
@@ -194,7 +206,7 @@ Zasady krytyczne dla szumów:
 |---|---|---|---|
 | U1 | Wzmacniacz operacyjny (dual op-amp — oba wzmacniacze U1A+U1B użyte jako 2 stopnie) | NE5532N (DIP-8, THT) + podstawka | 1 |
 | RV1 | Potencjometr GAIN TRIM | 10 kΩ, liniowy, mono, panel mount | 1 |
-| C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, elektrolit. THT | 3 |
+| C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, **elektrolit. DWUBIEGUNOWY (NP/bipolar)**, THT | 3 |
 | — | Kondensatory odsprzęgające zasilanie | 100 nF ceram. + 100 µF elektrolit | po 2 |
 | R_in | Rezystor wejściowy stopnia (ustala HPF, zgodny z R_eff=909Ω z analizy filtra) | **909 Ω**, E96, 1%, 0.25W | 2 |
 | R_fb | Rezystor sprzężenia zwrotnego (gain = R_fb/R_in = 30,1k/909 = 33,11× = 30,4 dB/stopień) | **30,1 kΩ**, E96, 1%, 0.25W | 2 |
@@ -202,6 +214,7 @@ Zasady krytyczne dla szumów:
 | R_VMID | Dzielnik wirtualnej masy | 2× równe (np. 100 kΩ), 1% | 2 |
 | C_VMID | Bypass wirtualnej masy | 10 µF elektrolit. | 1 |
 | R_out | Rezystor wyjściowy | 100 Ω, 1% | 1 |
+| R_bleed | Rezystor definiujący DC=0V na wyjściu (zapobiega "pop" przy podłączaniu kabla) | 100 kΩ, 1% | 1 |
 
 **Dobór R_in/R_fb — uzasadnienie:**  
 R_in = 909 Ω wynika wprost z wcześniejszej analizy filtra HPF (R_eff = 909Ω, z C=22µF daje f_c≈7,96Hz/stopień,  
