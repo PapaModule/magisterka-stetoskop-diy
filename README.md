@@ -185,13 +185,30 @@ Zasady krytyczne dla szumów:
 | RV1 | Potencjometr GAIN TRIM | 10 kΩ, liniowy, mono, panel mount | 1 |
 | C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, elektrolit. THT | 3 |
 | — | Kondensatory odsprzęgające zasilanie | 100 nF ceram. + 100 µF elektrolit | po 2 |
-| R_fb, R_in | Rezystory wzmocnienia (gain ×33/stopień) | metalizowane 1%, 0.25W | po 2 |
+| R_in | Rezystor wejściowy stopnia (ustala HPF, zgodny z R_eff=909Ω z analizy filtra) | **909 Ω**, E96, 1%, 0.25W | 2 |
+| R_fb | Rezystor sprzężenia zwrotnego (gain = R_fb/R_in = 30,1k/909 = 33,11× = 30,4 dB/stopień) | **30,1 kΩ**, E96, 1%, 0.25W | 2 |
 | R_pull | Rezystor zasilania kapsuły | 2.2 kΩ, 1% | 1 |
 | R_VMID | Dzielnik wirtualnej masy | 2× równe (np. 100 kΩ), 1% | 2 |
 | C_VMID | Bypass wirtualnej masy | 10 µF elektrolit. | 1 |
 | R_out | Rezystor wyjściowy | 100 Ω, 1% | 1 |
 
-> Dokładne wartości R_fb/R_in (dające ×33 z dostępnych wartości E96) — do domknięcia przy finalnym layoucie płytki.
+**Dobór R_in/R_fb — uzasadnienie:**  
+R_in = 909 Ω wynika wprost z wcześniejszej analizy filtra HPF (R_eff = 909Ω, z C=22µF daje f_c≈7,96Hz/stopień,  
+łącznie ~12,3Hz, −1,3dB @ 20Hz — zachowuje S3/S4). R_fb = 30,1 kΩ to najbliższa wartość E96 dająca  
+gain ≈ 33× (dokładnie 33,11× = 30,4dB/stopień; całkowite wzmocnienie = 33,11² = 1096,5× = **60,80 dB**,  
+różnica 0,1dB względem celu — nieistotna, korygowalna trymerem RV1).
+
+Dodatkowe kontrole: moc rozpraszana w R_in/R_fb przy max sygnale to odpowiednio ~1,2µW / ~0,04µW —  
+margines >200×/>6000× względem ratingu 0,25W. Szum Johnsona obu rezystorów (274nV / 1574nV RMS w  
+paśmie 5kHz) jest porównywalny z szumem własnym NE5532 (354nV) — oba nieistotne wobec self-noise  
+kapsuły WM-61A (dominujące źródło szumu układu).
+
+> **Ważne — sposób podłączenia RV1:** trymer MUSI być podłączony jako dzielnik napięcia  
+> (3 wyprowadzenia: górne = sygnał z C_in, dolne = GND, suwak = do R_in/U1A), NIE jako rezystor  
+> szeregowy (2 wyprowadzenia). Tylko wtedy obciążenie AC kapsuły jest stałe — R_pull(2,2kΩ) ‖ pełna  
+> rezystancja RV1(10kΩ) = **1803 Ω** niezależnie od ustawienia suwaka, w zalecanym zakresie obciążenia  
+> WM-61A. Przy podłączeniu szeregowym obciążenie zmieniałoby się wraz z pozycją trymera (od 643Ω do  
+> 1831Ω), schodząc w skrajnym ustawieniu poniżej zalecanego minimum.
 
 ### Zasilanie
 
@@ -225,7 +242,8 @@ Zasady krytyczne dla szumów:
 - [x] Analiza ryzyka clippingu i umiejscowienie trymera (RV1 na wejściu)
 - [x] BOM z kategoriami komponentów i orientacyjnym kosztorysem
 - [x] Plan montażu głowicy i preamp boxa
-- [ ] Dokładne wartości R_fb/R_in i finalny layout veroboard
+- [x] Dokładne wartości R_fb/R_in dobrane (R_in=909Ω, R_fb=30,1kΩ, E96 1% — gain=33,11×/stopień, 60,80dB całkowite)
+- [ ] Finalny layout veroboard
 - [ ] Zakup komponentów, weryfikacja symboli TME/Botland przed zamówieniem
 - [ ] Budowa i testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
 
