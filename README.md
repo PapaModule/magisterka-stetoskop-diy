@@ -8,57 +8,92 @@ Cel: nagrywanie próbek treningowych / inferencyjnych klasy normal / murmur / ex
 | Parametr | Wartość |
 |---|---|
 | Kapsułka | Panasonic WM-61A (elektret, −42 dBV/Pa, szum ~28 dB SPL) |
-| Wzmocnienie | ~40 dB (×100) |
-| Pasmo użyteczne | ~16 Hz – 5 kHz |
-| Zasilanie | Bateria 9V PP3 (żywotność ~60h przy prądzie 8 mA) |
+| Wzmocnienie | **60 dB (×1089)**, 2 stopnie kaskadowe ×33 (30 dB każdy) + trymer wejściowy |
+| Pasmo użyteczne | ~12 Hz – 5 kHz (filtr górnoprzepustowy 22 µF zachowuje tony S3/S4) |
+| Zasilanie | **2× ogniwo Li-ion 18650 (2S, 8.4V→6.0V)**, BMS 2S, ładowanie TP5100 + USB-C |
+| Żywotność baterii | ~300 h pracy ciągłej / ~3.8 h ładowania |
 | Wyjście | TS 6.35mm mono (niebalansowane) → interfejs USB audio |
-| Wejście kapsułki | TRS 3.5mm (kabel stetoskop ↔ preamp box) |
-| Obudowa | Metalowa (ekranowanie EMI) |
+| Wejście kapsułki | **TS 3.5mm** (kabel głowica stetoskopu ↔ preamp box) |
+| Obudowa | Metalowa Hammond 1590B (ekranowanie EMI, mieści baterie) |
 
 ## Architektura (modułowa)
 
 ```
-[Głowica stetoskopu]            [Preamp box]                [Interfejs USB]
-  WM-61A kapsułka               ┌──────────────────────┐
-  wklejona w dzwonek    TRS     │ Gniazdo TRS 3.5mm in │
-  ─────── kabel 1.5m ──────────>│ NE5532 preamp 40 dB  │─── TS 6.35mm ──> wejście line/mic
-  T: sygnał                     │ Bateria 9V PP3        │
-  R: +V zasilanie kapsułki      │ Gniazdo TS 6.35mm out│
-  S: GND                        └──────────────────────┘
+[Głowica stetoskopu]                [Preamp box]                     [Interfejs USB]
+  WM-61A kapsułka         TS        ┌────────────────────────────┐
+  wklejona w dzwonku    3.5mm       │ Gniazdo TS 3.5mm in        │
+  ──────── kabel 1.5m ─────────────>│ RV1 (gain trim, na wejściu)│
+  Tip: sygnał + zasilanie kapsuły   │ → U1A (×33) → U1B (×33)    │── TS 6.35mm ──> wejście line
+  Sleeve: GND                       │   = 60 dB całkowite         │
+                                    │ 2×18650 (2S) + BMS + TP5100 │
+                                    │ Gniazdo USB-C (ładowanie)   │
+                                    │ Gniazdo TS 6.35mm out       │
+                                    └────────────────────────────┘
 ```
 
 **Zasada zasilania kapsułki przez kabel:**  
-Preamp box zasila WM-61A przez żyłę Ring kabla TRS (rezystor pullup 2.2 kΩ do +9V).  
-Sygnał wraca żyłą Tip. Głowica stetoskopu nie zawiera żadnej elektroniki.
+Kapsuła WM-61A ma tylko 2 wyprowadzenia (sygnał+zasilanie / GND), dlatego kabel to **TS** (nie TRS).  
+Preamp box zasila kapsułę przez żyłę Tip (rezystor pull-up R_pull = 2.2 kΩ do V+); tą samą żyłą wraca sygnał audio (sprzęgnięty pojemnościowo C_in). Sleeve = GND. Głowica stetoskopu nie zawiera żadnej elektroniki.
 
-## Kosztorys
+## Łańcuch wzmacniający — schemat elektryczny (zweryfikowany)
+
+```
+Kapsuła → C_in(22µF/16V) → RV1(10kΩ, GAIN TRIM na panelu) → U1A (inwert. ×33, 30 dB)
+        → C_inter(22µF/16V) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) → TS 6.35mm
+```
+
+Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dzielnik R_VMID + bypass C_VMID).
+
+### Wyniki weryfikacji elektrycznej
+
+| Kontrola | Wynik |
+|---|---|
+| Wzmocnienie całkowite | ×1089 = **60.7 dB** ✓ (zgodne z wymaganiem wynikającym z analizy SPL→V) |
+| Filtr górnoprzepustowy (HPF) | C = 22 µF → tłumienie na 20 Hz tylko **−1.3 dB** (S3/S4 zachowane; przy 10 µF byłoby −4.9 dB — niedopuszczalne) |
+| Ryzyko clippingu | RV1 na **wejściu** (przed wzmocnieniem) — sygnał nigdy nie przekracza marginesu swing wewnątrz U1A/U1B, niezależnie od stanu baterii i poziomu SPL |
+| Poziomy wyjściowe | 173 mV @ 60 dB SPL · 307 mV @ 65 dB SPL · 971 mV @ 75 dB SPL — sensowne poziomy liniowe |
+| Zapas napięciowy NE5532 | 3.5–6.3× margines względem sygnału w całym zakresie napięcia baterii (8.4V → 6.0V odcięcie BMS) |
+| Pasmo / stabilność | 303 kHz/stopień — 60× zapas nad wymaganym 5 kHz |
+
+## Kosztorys (orientacyjny, do potwierdzenia cen na TME/Botland)
 
 | Komponent | Źródło | Koszt |
 |---|---|---|
 | Stetoskop (używany) | Allegro | 20–35 zł |
 | Kapsułka Panasonic WM-61A | TME.eu | 5–8 zł |
-| NE5532N (DIP-8) | TME / Botland | 2 zł |
-| Obudowa metalowa (Hammond 1590A lub equiv.) | TME / Allegro | 15–30 zł |
-| Gniazdo TRS 3.5mm (panel mount) | Botland / Allegro | 4–6 zł |
+| 2× NE5532N (DIP-8 + podstawka) | TME / Botland | 4–6 zł |
+| Obudowa metalowa Hammond 1590B lub equiv. | TME / Allegro | 25–45 zł |
+| Gniazdo TS 3.5mm (panel mount, mono!) | Botland / Allegro | 4–6 zł |
 | Gniazdo TS 6.35mm (panel mount) | Botland / Allegro | 4–6 zł |
+| Potencjometr 10 kΩ + pokrętło (gain trim, panel) | TME / Botland | 6–10 zł |
+| 2× ogniwo 18650 (markowe, np. Samsung/Molicel) | sklep elektroniczny | 30–50 zł |
+| Koszyczek 2×18650 + moduł BMS 2S 8.4V | Botland / AliExpress | 15–25 zł |
+| Moduł ładowania TP5100 (2S) + gniazdo USB-C | Botland / AliExpress | 12–20 zł |
 | Wyłącznik ON/OFF | Botland | 3–5 zł |
-| Koszyczek baterii 9V + bateria | Allegro / sklep elektr. | 7–10 zł |
-| Rezystory + kondensatory (assorted) | TME | 5–8 zł |
+| Rezystory + kondensatory (assorted, w tym 3× 22µF/16V) | TME | 8–12 zł |
 | Płytka prototypowa veroboard | Botland / Allegro | 5–8 zł |
-| Kabel TRS 3.5mm (1.5m, do stetoskopu) | Allegro | 6–10 zł |
-| Wtyczka TRS 3.5mm (na kabel głowicy) | Allegro | 2–3 zł |
-| **Razem** | | **~78–131 zł** |
+| Kabel TS 3.5mm (1.5m, ekranowany, do stetoskopu) | Allegro | 6–10 zł |
+| Wtyczka TS 3.5mm (na kabel głowicy) | Allegro | 2–3 zł |
+| **Razem** | | **~145–250 zł** |
 
-> Kabel wyjściowy TS 6.35mm → interfejs pominięty (zakładamy posiadany).  
-> Wysyłka TME darmowa od ~100 zł.
+> Wzrost kosztu względem pierwotnej wersji (9V) wynika z przejścia na zasilanie 2×18650 + ładowanie USB-C  
+> (żywotność ~300h zamiast ~60h, ładowalne zamiast wymiany baterii) oraz większej obudowy.  
+> Kabel wyjściowy TS 6.35mm → interfejs pominięty (zakładamy posiadany). Wysyłka TME darmowa od ~100 zł.
 
 ## Decyzje projektowe
 
-### Dlaczego bateria 9V zamiast phantom 48V?
-Phantom 48V wymaga regulatora napięcia i ogranicza wybór wzmacniacza operacyjnego (NE5532 pobiera ~8 mA — na granicy normy IEC 61938 dla phantom). Bateria 9V eliminuje całą tę złożoność. Żywotność baterii alkalicznej PP3 (~500 mAh / 8 mA) = ~62 godziny nagrywania.
+### Dlaczego 2×18650 (Li-ion, ładowane USB-C) zamiast baterii 9V PP3?
+Pierwotnie wybrano baterię 9V (eliminacja złożoności phantom power). Po dalszej analizie żywotności  
+(~60h dla 9V PP3 vs potencjalnie ~300h dla 2×18650 w konfiguracji 2S) i preferencji użytkownika  
+zdecydowano o przejściu na ogniwa Li-ion 18650: 2 ogniwa w serii (2S, 8.4V pełne → 6.0V odcięcie BMS),  
+moduł BMS 2S (ochrona nad/pod-napięciowa), ładowanie przez moduł TP5100 z gniazda USB-C.  
+NE5532 zweryfikowano jako stabilny i bezpieczny w całym zakresie napięcia rozładowania (margines 3.5–6.3×).
 
-### Dlaczego wyjście niebalansowane TS zamiast XLR?
-Przy odległości stetoskop–interfejs ≤ 2 m zakłócenia na kablu TS są pomijalne. XLR wymaga elektronicznego balansowania (dodatkowa połówka NE5532 jako inverter fazowy) i droższego złącza — zbędna komplikacja.
+### Dlaczego wyjście niebalansowane TS zamiast XLR / phantom 48V?
+Phantom 48V wymagałby regulatora napięcia i ograniczał wybór wzmacniacza (NE5532 pobiera ~8mA —  
+na granicy normy IEC 61938). Przy odległości stetoskop–interfejs ≤ 2m zakłócenia na kablu TS są  
+pomijalne. XLR wymagałby dodatkowego inwertera fazowego (druga połówka NE5532) i droższego złącza —  
+zbędna komplikacja przy zasilaniu bateryjnym i krótkim kablu.
 
 ### Dlaczego WM-61A zamiast Primo EM-172?
 WM-61A (Panasonic): szum ~28 dB SPL, dostępna od ręki w TME (~5–8 zł).  
@@ -66,18 +101,133 @@ EM-172 (Primo): szum ~14 dB SPL, trudna do znalezienia w Polsce, ~35–50 zł.
 Dla dźwięków serca (SPL ~60–80 dB przy stetoskopie) różnica SNR jest nieistotna.
 
 ### Dlaczego obudowa metalowa?
-Elektret jest czuły na zakłócenia elektromagnetyczne (EMI od laptopa, zasilacza, WiFi). Metalowa obudowa uziemiona do GND układu eliminuje ten problem.
+Elektret jest czuły na zakłócenia elektromagnetyczne (EMI od laptopa, zasilacza, WiFi). Metalowa  
+obudowa uziemiona do GND układu (w jednym punkcie — star ground) eliminuje ten problem.
 
-### Połączenie głowica ↔ preamp przez TRS 3.5mm
-Modularne podejście — głowica stetoskopu to tylko kapsułka + kabel + wtyczka (zero elektroniki w głowicy). Możliwość wymiany kapsułki lub stetoskopu bez ingerencji w preamp box.
+### Dlaczego TS 3.5mm zamiast TRS do połączenia głowica ↔ preamp?
+WM-61A ma tylko 2 wyprowadzenia (łączone sygnał+zasilanie oraz GND) — trzeci styk TRS byłby  
+nadmiarowy. Tip kabla TS niesie jednocześnie zasilanie DC (przez R_pull = 2.2kΩ) i sygnał audio  
+(sprzężony pojemnościowo przez C_in), Sleeve = GND. Modularne podejście zachowane: głowica = tylko  
+kapsuła + kabel + wtyczka, zero elektroniki — można wymienić kapsułę lub stetoskop bez ingerencji w preamp.
 
-## Następne kroki
+### Dlaczego 60 dB wzmocnienia (a nie 40 dB jak pierwotnie założono)?
+Analiza łańcucha SPL→napięcie pokazała, że przy 40 dB (×100) typowy dźwięk serca (65 dB SPL z  
+uwzględnieniem wzmocnienia akustycznego dzwonka stetoskopu) dawałby tylko ~28 mV — zbyt cicho dla  
+wejścia LINE (~775 mV) i jednocześnie zbyt głośno dla wejścia MIC (~2.5 mV). 60 dB (×1089), uzyskane  
+przez kaskadę obu połówek NE5532 jako wzmacniaczy odwracających (30 dB każdy), daje poziomy  
+173–971 mV w realistycznym zakresie SPL — pasujące do wejścia LINE.
 
-- [ ] Schemat elektryczny preamp box (NE5532, zasilanie, filtrowanie)
-- [ ] Schemat montażu kapsułki w głowicy stetoskopu
-- [ ] Lista zakupów z konkretnymi symbolami TME
-- [ ] Schemat płytki prototypowej (layout veroboard)
-- [ ] Testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
+### Dlaczego trymer wzmocnienia (RV1) na WEJŚCIU, a nie na wyjściu?
+Pierwotnie planowano potencjometr na wyjściu układu. Weryfikacja wykazała, że przy głośnych  
+dźwiękach (80 dB SPL) i niskim stanie baterii (VMID obniżone do odcięcia BMS) wewnętrzny sygnał  
+na wyjściu U1B osiągałby 1721 mV RMS — powyżej maksymalnego marginesu swing 1061 mV — czyli  
+**clipping wewnątrz wzmacniacza, zanim potencjometr zdążyłby go stłumić**. Przeniesienie RV1 przed  
+C_in i U1A (na wejście) tłumi sygnał *przed* wzmocnieniem — całkowicie eliminuje ryzyko clippingu  
+niezależnie od stanu baterii i głośności, kosztem nieistotnego pogorszenia szumu (dominuje  
+self-noise kapsuły, nie szum op-ampu).
+
+### Dlaczego filtr górnoprzepustowy z C = 22 µF (a nie 10 µF)?
+Przy C_in = C_inter = 10 µF i R_eff = 909 Ω pojedynczy stopień ma f_c = 17.5 Hz, ale dwa kaskadowe  
+stopnie HPF dają łączny punkt −3dB ok. 27.1 Hz — co oznacza tłumienie aż −4.9 dB na 20 Hz, czyli  
+dokładnie w paśmie tonu **S4 (20–30 Hz)**. Z dokumentacji macierzystego projektu wynika, że  
+filtrowanie dolnoprzepustowe w tym paśmie już wcześniej powodowało problemy z datasetem.  
+Zwiększenie do 22 µF obniża łączny punkt −3dB do ~12.3 Hz, ograniczając tłumienie na 20 Hz do  
+zaledwie −1.3 dB — zachowuje zarówno S4 (20–30 Hz), jak i S3 (25–50 Hz).
+
+## Montaż — głowica stetoskopu (kapsuła WM-61A)
+
+1. Usunąć oryginalną membranę/przewód akustyczny ze stetoskopu, zachowując dzwonek jako rezonator  
+   (jego kształt nadaje charakterystyczne wzmocnienie tonów niskich — istotne dla S3/S4).
+2. Wywiercić mały otwór (Ø ~3-4mm) w ściance dzwonka na kabel — z dala od osi akustycznej membrany.
+3. Wkleić kapsułę WM-61A stroną z otworem dźwiękowym w stronę membrany/pacjenta, blisko centrum  
+   dzwonka, używając elastycznego silikonu akustycznego (np. uszczelniacz sanitarny neutralny) —  
+   zapobiega przenoszeniu drgań mechanicznych obudowy na kapsułę (mikrofonia).
+4. Lutowanie: ekranowany kabel sygnałowy (oplot = GND), możliwie krótkie nieekranowane odcinki  
+   przy samej kapsule (podatność na EMI).
+5. Uszczelnić otwór kablowy — zapobiega przeciekom akustycznym i kondensacji wilgoci.
+6. Test szczelności: lekkie stuknięcie w membranę przy podłączonym wzmacniaczu — brak "świstów"  
+   wskazuje na szczelne wklejenie.
+
+## Montaż — preamp box (Hammond 1590B)
+
+```
+  Widok od góry (panel wieczka):
+  ┌───────────────────────────────────────┐
+  │  [TS 3.5mm IN]   [LED]   [GAIN TRIM]   │ ← panel przedni
+  │                                         │
+  │  ┌──────────┐      ┌─────────────────┐ │
+  │  │ koszyczek│      │  veroboard:      │ │
+  │  │ 2×18650  │      │  2× NE5532       │ │
+  │  │ + BMS    │      │  + bias + filtry │ │
+  │  └──────────┘      └─────────────────┘ │
+  │                                         │
+  │  [TP5100 + USB-C]         [TS 6.35 OUT]│ ← panel tylny
+  │  [ON/OFF]                               │
+  └───────────────────────────────────────┘
+```
+
+Zasady krytyczne dla szumów:
+- **Baterie/BMS/ładowarka fizycznie odseparowane** od veroboard z NE5532 (przegroda lub odstęp >2cm) —  
+  TP5100 i przełączanie generują zakłócenia impulsowe.
+- **Gniazdo wejściowe jak najbliżej C_in/U1A** — minimalizacja długości najbardziej podatnej na szum  
+  ścieżki (przed wzmocnieniem ×1089 każdy piko-wolt zakłóceń też zostanie wzmocniony).
+- **Jeden punkt masy (star ground)** — wszystkie GND zbiegają się przy U1, brak pętli masy.
+- **Obudowa uziemiona do GND sygnałowego w jednym punkcie** — ekranowanie EMI bez pętli masy.
+- **GAIN TRIM (RV1) na panelu przednim** — łatwy dostęp do regulacji poziomu podczas nagrywania.
+
+## Bill of Materials (BOM)
+
+### Elektronika preamp boxa
+
+| Poz. | Element | Wartość/typ | Ilość |
+|---|---|---|---|
+| U1, U2 | Wzmacniacz operacyjny | NE5532N (DIP-8, THT) + podstawka | 2 |
+| RV1 | Potencjometr GAIN TRIM | 10 kΩ, liniowy, mono, panel mount | 1 |
+| C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, elektrolit. THT | 3 |
+| — | Kondensatory odsprzęgające zasilanie | 100 nF ceram. + 100 µF elektrolit | po 2 |
+| R_fb, R_in | Rezystory wzmocnienia (gain ×33/stopień) | metalizowane 1%, 0.25W | po 2 |
+| R_pull | Rezystor zasilania kapsuły | 2.2 kΩ, 1% | 1 |
+| R_VMID | Dzielnik wirtualnej masy | 2× równe (np. 100 kΩ), 1% | 2 |
+| C_VMID | Bypass wirtualnej masy | 10 µF elektrolit. | 1 |
+| R_out | Rezystor wyjściowy | 100 Ω, 1% | 1 |
+
+> Dokładne wartości R_fb/R_in (dające ×33 z dostępnych wartości E96) — do domknięcia przy finalnym layoucie płytki.
+
+### Zasilanie
+
+| Element | Typ | Uwagi |
+|---|---|---|
+| 2× ogniwo Li-ion 18650 | markowe (Samsung INR18650-30Q, Molicel lub równ.) | nie kupować no-name |
+| Koszyczek 2×18650 | z przewodami, montaż serii | dopasować pod obudowę |
+| BMS 2S | moduł ochrony Li-ion 2S 8.4V, ~10-20A | **wymagany — bez niego ryzyko pożaru/uszkodzenia ogniw** |
+| Moduł ładowania TP5100 | wersja 2S | wejście 5V z USB-C |
+| Gniazdo USB-C | ew. z PD trigger (np. CH224K) dla szybszego ładowania | opcjonalnie |
+| Przełącznik ON/OFF | dźwigniowy, panel mount | |
+| LED + rezystor | wskaźnik zasilania | |
+
+### Złącza, mechanika
+
+| Element | Typ | Uwagi |
+|---|---|---|
+| Gniazdo wejściowe | TS 3.5mm (mono!), panel mount | **uwaga: TS, nie TRS** |
+| Gniazdo wyjściowe | TS 6.35mm, panel mount | Neutrik lub equiv. |
+| Obudowa | Hammond 1590B lub równ. | metalowa, mieści 2×18650 |
+| Kabel głowicy | TS 3.5mm, 1.5m, ekranowany | |
+| Wtyczka kabla głowicy | TS 3.5mm | |
+| Płytka prototypowa | veroboard, THT | |
+| Kapsuła | Panasonic WM-61A | wklejana w dzwonek stetoskopu |
+
+## Status projektu
+
+- [x] Architektura ogólna (głowica TS + preamp box + zasilanie Li-ion)
+- [x] Schemat elektryczny łańcucha wzmacniającego (60dB, 2× NE5532, zweryfikowany)
+- [x] Filtr górnoprzepustowy dobrany pod tony S3/S4 (C=22µF)
+- [x] Analiza ryzyka clippingu i umiejscowienie trymera (RV1 na wejściu)
+- [x] BOM z kategoriami komponentów i orientacyjnym kosztorysem
+- [x] Plan montażu głowicy i preamp boxa
+- [ ] Dokładne wartości R_fb/R_in i finalny layout veroboard
+- [ ] Zakup komponentów, weryfikacja symboli TME/Botland przed zamówieniem
+- [ ] Budowa i testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
 
 ## Powiązane projekty
 
