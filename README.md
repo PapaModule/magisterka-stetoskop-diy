@@ -38,11 +38,22 @@ Preamp box zasila kapsułę przez żyłę Tip (rezystor pull-up R_pull = 2.2 kΩ
 ## Łańcuch wzmacniający — schemat elektryczny (zweryfikowany)
 
 ```
-Kapsuła → C_in(22µF/16V) → RV1(10kΩ, GAIN TRIM na panelu) → U1A (inwert. ×33, 30 dB)
-        → C_inter(22µF/16V) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) → TS 6.35mm
+Kapsuła → RV1(10kΩ, dzielnik napięcia, GAIN TRIM na panelu) → C_in(22µF/16V) → R_in(909Ω) → U1A (inwert. ×33, 30 dB)
+        → C_inter(22µF/16V) → R_in(909Ω) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) → TS 6.35mm
 ```
 
 Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dzielnik R_VMID + bypass C_VMID).
+
+> **Krytyczne dla poprawnego działania — kolejność RV1 i C_in:**  
+> C_in MUSI siedzieć PO suwaku RV1 (między suwakiem a R_in), nie przed potencjometrem. Przy odwrotnej  
+> kolejności (C_in przed RV1) powstaje ścieżka DC z węzła wirtualnej masy przez R_in i dolną część  
+> potencjometru do GND — wymagałoby to napięcia DC na wyjściu U1A rzędu kilkunastu–stu woltów (przy  
+> zasilaniu 6–8,4V!), więc op-amp wpadłby w saturację przy KAŻDYM ustawieniu trymera i układ w ogóle  
+> by nie wzmacniał sygnału. Przy poprawnej kolejności C_in blokuje DC, jedyną drogą do węzła wirtualnej  
+> masy pozostaje R_fb — op-amp ustala punkt pracy dokładnie na VMID. Zweryfikowano, że ta zmiana nie  
+> wymaga modyfikacji BOM (te same 3× 22µF) i nie pogarsza żadnego wcześniej zweryfikowanego parametru  
+> (HPF w najgorszym przypadku nadal daje f_c≈7,96Hz/stopień → −1,3dB @ 20Hz; obciążenie kapsuły  
+> R_pull‖RV1=1803Ω; wzmocnienie i headroom bez zmian).
 
 ### Wyniki weryfikacji elektrycznej
 
@@ -61,7 +72,7 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 |---|---|---|
 | Stetoskop (używany) | Allegro | 20–35 zł |
 | Kapsułka Panasonic WM-61A | TME.eu | 5–8 zł |
-| 2× NE5532N (DIP-8 + podstawka) | TME / Botland | 4–6 zł |
+| 1× NE5532N (DIP-8 + podstawka) | TME / Botland | 2–3 zł |
 | Obudowa metalowa Hammond 1590B lub equiv. | TME / Allegro | 25–45 zł |
 | Gniazdo TS 3.5mm (panel mount, mono!) | Botland / Allegro | 4–6 zł |
 | Gniazdo TS 6.35mm (panel mount) | Botland / Allegro | 4–6 zł |
@@ -157,7 +168,7 @@ zaledwie −1.3 dB — zachowuje zarówno S4 (20–30 Hz), jak i S3 (25–50 Hz)
   │                                         │
   │  ┌──────────┐      ┌─────────────────┐ │
   │  │ koszyczek│      │  veroboard:      │ │
-  │  │ 2×18650  │      │  2× NE5532       │ │
+  │  │ 2×18650  │      │  1× NE5532       │ │
   │  │ + BMS    │      │  + bias + filtry │ │
   │  └──────────┘      └─────────────────┘ │
   │                                         │
@@ -181,7 +192,7 @@ Zasady krytyczne dla szumów:
 
 | Poz. | Element | Wartość/typ | Ilość |
 |---|---|---|---|
-| U1, U2 | Wzmacniacz operacyjny | NE5532N (DIP-8, THT) + podstawka | 2 |
+| U1 | Wzmacniacz operacyjny (dual op-amp — oba wzmacniacze U1A+U1B użyte jako 2 stopnie) | NE5532N (DIP-8, THT) + podstawka | 1 |
 | RV1 | Potencjometr GAIN TRIM | 10 kΩ, liniowy, mono, panel mount | 1 |
 | C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, elektrolit. THT | 3 |
 | — | Kondensatory odsprzęgające zasilanie | 100 nF ceram. + 100 µF elektrolit | po 2 |
@@ -204,11 +215,13 @@ paśmie 5kHz) jest porównywalny z szumem własnym NE5532 (354nV) — oba nieist
 kapsuły WM-61A (dominujące źródło szumu układu).
 
 > **Ważne — sposób podłączenia RV1:** trymer MUSI być podłączony jako dzielnik napięcia  
-> (3 wyprowadzenia: górne = sygnał z C_in, dolne = GND, suwak = do R_in/U1A), NIE jako rezystor  
-> szeregowy (2 wyprowadzenia). Tylko wtedy obciążenie AC kapsuły jest stałe — R_pull(2,2kΩ) ‖ pełna  
-> rezystancja RV1(10kΩ) = **1803 Ω** niezależnie od ustawienia suwaka, w zalecanym zakresie obciążenia  
-> WM-61A. Przy podłączeniu szeregowym obciążenie zmieniałoby się wraz z pozycją trymera (od 643Ω do  
-> 1831Ω), schodząc w skrajnym ustawieniu poniżej zalecanego minimum.
+> (3 wyprowadzenia: górne = bezpośrednio z węzła kapsuły/R_pull, dolne = GND, suwak = do C_in →  
+> R_in → U1A), NIE jako rezystor szeregowy (2 wyprowadzenia) i NIE z C_in przed potencjometrem  
+> (patrz ramka wyżej — to uniemożliwiłoby działanie układu). Tylko przy takim podłączeniu obciążenie  
+> AC/DC kapsuły jest stałe — R_pull(2,2kΩ) ‖ pełna rezystancja RV1(10kΩ) = **1803 Ω** niezależnie od  
+> ustawienia suwaka, w zalecanym zakresie obciążenia WM-61A. Przy podłączeniu szeregowym obciążenie  
+> zmieniałoby się wraz z pozycją trymera (od 643Ω do 1831Ω), schodząc w skrajnym ustawieniu poniżej  
+> zalecanego minimum.
 
 ### Zasilanie
 
@@ -237,7 +250,7 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 ## Status projektu
 
 - [x] Architektura ogólna (głowica TS + preamp box + zasilanie Li-ion)
-- [x] Schemat elektryczny łańcucha wzmacniającego (60dB, 2× NE5532, zweryfikowany)
+- [x] Schemat elektryczny łańcucha wzmacniającego (60dB, 1× NE5532 dual op-amp, zweryfikowany)
 - [x] Filtr górnoprzepustowy dobrany pod tony S3/S4 (C=22µF)
 - [x] Analiza ryzyka clippingu i umiejscowienie trymera (RV1 na wejściu)
 - [x] BOM z kategoriami komponentów i orientacyjnym kosztorysem
