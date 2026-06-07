@@ -198,6 +198,111 @@ Zasady krytyczne dla szumów:
 - **Obudowa uziemiona do GND sygnałowego w jednym punkcie** — ekranowanie EMI bez pętli masy.
 - **GAIN TRIM (RV1) na panelu przednim** — łatwy dostęp do regulacji poziomu podczas nagrywania.
 
+## Layout płytki veroboard (paski miedzi)
+
+Konstrukcja: płytka prototypowa **veroboard/stripboard** (równoległe paski miedzi), montaż punkt-punkt
+zgodnie z poniższym netlistem. Wybrana zamiast perfboardu (łatwiejsze prowadzenie szyn zasilania
+wzdłuż pasków) i zamiast PCB (brak potrzeby zamawiania, jednostkowy prototyp).
+
+### Netlist (połączenia punkt-punkt)
+
+Węzły nazwane zgodnie ze schematem: `CAP` = węzeł kapsuły/R_pull, `N1`=wejście U1A,
+`N2`=wyjście U1A / wejście C_inter, `N3`=wejście U1B, `N4`=wyjście U1B / wejście C_out,
+`OUT`=węzeł wyjściowy (po C_out, do gniazda), `VMID`=wirtualna masa (V+/2).
+
+| # | Połączenie | Uwagi |
+|---|---|---|
+| 1 | TS 3.5mm IN (tip) → CAP | sygnał z głowicy kapsuły |
+| 2 | TS 3.5mm IN (sleeve) → GND | masa sygnałowa |
+| 3 | CAP → R_pull (2,2 kΩ) → V+ | zasilanie kapsuły FET (patrz specyfikacja WM-61A) |
+| 4 | CAP → RV1 terminal górny | DC-sprzężenie bezpośrednie — **bez C_in przed potencjometrem** |
+| 5 | RV1 terminal dolny → GND | dzielnik napięcia (3-terminalowy, stały ładunek 10 kΩ) |
+| 6 | RV1 suwak → C_in (+) | AC-sprzężenie PO trymerze |
+| 7 | C_in (−) → R_in (909 Ω) → N1 | wejście stopnia U1A |
+| 8 | N1 → R_fb (30,1 kΩ) → N2 | sprzężenie zwrotne stopnia 1 |
+| 9 | U1A pin3 (IN+) → VMID | bias nieodwracającego wejścia |
+| 10 | U1A pin1 (OUT) = N2 | wyjście stopnia 1 |
+| 11 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
+| 12 | C_inter (−) → R_in (909 Ω) → N3 | wejście stopnia U1B |
+| 13 | N3 → R_fb (30,1 kΩ) → N4 | sprzężenie zwrotne stopnia 2 |
+| 14 | U1B pin5 (IN+) → VMID | bias nieodwracającego wejścia |
+| 15 | U1B pin7 (OUT) = N4 | wyjście stopnia 2 |
+| 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
+| 17 | C_out (−) → OUT | węzeł wyjściowy |
+| 18 | OUT → R_bleed (100 kΩ) → GND | definiuje DC=0V na wyjściu (anty-pop) |
+| 19 | OUT → R_out (100 Ω) → TS 6.35mm (tip) | izolacja wyjścia od pojemności kabla |
+| 20 | TS 6.35mm (sleeve) → GND | masa sygnałowa wyjścia |
+| 21 | VMID = R_VMID/R_VMID dzielnik z V+ → C_VMID → GND | generacja wirtualnej masy |
+| 22 | U1 pin8 (V+) → szyna zasilania, C_decouple (100 nF) → GND blisko pinu | odsprzęganie zasilania |
+| 23 | U1 pin4 (V−/GND) → **punkt star-ground** | wszystkie GND zbiegają tutaj |
+| 24 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI bez pętli masy |
+
+### Montaż NE5532 (DIP-8) na paskach równoległych
+
+Krytyczny punkt: nóżki 1↔8, 2↔7, 3↔6, 4↔5 leżą na tych samych paskach miedzi (IC „okracza"
+4 kolumny A–D), więc bez przecięć każda para zostałaby zwarta:
+
+```
+        kolumna:   A    B    C    D    D    C    B    A
+                   │    │    │    │    │    │    │    │
+   pasek miedzi →──┼────┼────┼────┼─ ╳ ─┼────┼────┼────┼──
+                   │    │    │    │    │    │    │    │
+        DIP-8:    pin1 pin2 pin3 pin4 pin5 pin6 pin7 pin8
+                  N2   N1  VMID GND  VMID  N3   N4   V+
+                  OUT  IN- IN+  ⊥*  IN+  IN- OUT
+                  (A)  (B)  (C) (D)  (D)  (C)  (B)  (A)
+
+   ╳ = WYMAGANE PRZECIĘCIE paska między rzędem górnym (piny 1-4)
+       a dolnym (piny 5-8) — w KAŻDEJ z 4 kolumn A, B, C, D.
+   * pin4 = punkt star-ground całego układu
+```
+
+> **To najczęstszy błąd montażu DIP na stripboardzie.** Cztery przecięcia (po jednym na
+> kolumnę, między rzędami pinów) są obowiązkowe — bez nich każda para pinów 1-8, 2-7,
+> 3-6, 4-5 zostanie zwarta przez wspólny pasek. **Zweryfikować miernikiem ciągłości
+> (każda para pinów = rozwarcie) przed włożeniem układu w podstawkę.**
+
+### Plan rozmieszczenia (strefy)
+
+```
+  ┌─────────────┬───────────────────────┬─────────────┐
+  │  STREFA     │   STREFA WZMOCNIENIA  │   STREFA    │
+  │  WEJŚCIOWA  │   (IC + pasywne       │  WYJŚCIOWA  │
+  │             │    stopni 1 i 2)      │             │
+  │ • TS IN     │                       │ • R_out     │
+  │ • R_pull    │   ┌───────────────┐   │ • R_bleed   │
+  │ • RV1       │   │  U1 (DIP-8)   │   │ • C_out     │
+  │ • C_in      │   │  + R_in/R_fb  │   │ • TS OUT    │
+  │ • R_in      │   │  + C_inter    │   │             │
+  │             │   │  ★ star-GND   │   │             │
+  │             │   │   (pin 4)     │   │             │
+  ├─────────────┴───┴───────┬───────┴───┴─────────────┤
+  │     STREFA ZASILANIA / VMID (wzdłuż dolnej krawędzi)│
+  │  R_VMID×2, C_VMID, C_decouple, BMS/bateria → V+    │
+  └─────────────────────────────────────────────────────┘
+
+  Sygnał płynie LEWO → PRAWO.  Masa (★) promieniście od pin4 U1 (star ground).
+```
+
+### Kolejność montażu (zalecana)
+
+1. **Wykonać 4 przecięcia w obszarze IC** (kolumny A-D, między rzędami pinów) i
+   **zweryfikować miernikiem ciągłości** — każda para 1-8/2-7/3-6/4-5 musi być rozwarta.
+2. Zamontować podstawkę DIP-8 (bez układu scalonego).
+3. Wlutować rezystory (R_pull, RV1 — przewody na panel, R_in×2, R_fb×2, R_out, R_bleed, R_VMID×2).
+4. Wlutować kondensatory ceramiczne (C_decouple, C_VMID).
+5. Wlutować kondensatory elektrolityczne **NP/bipolarne** (C_in, C_inter, C_out) — zwrócić uwagę,
+   że wszystkie trzy są wizualnie identyczne (22 µF/16 V) — łatwo o pomyłkę w kolejności montażu,
+   nie w polaryzacji (NP nie ma polaryzacji, ale można pomylić miejsce w sygnale).
+6. Połączenia poza płytką: RV1, gniazda TS 3.5/6.35, przełącznik, BMS/bateria, LED.
+7. **Przetestować ciągłość całego netlistu miernikiem PRZED włożeniem układu scalonego**
+   — szczególnie pary 1-8/2-7/3-6/4-5 (rozwarcie) i każde połączenie z tabeli netlistu (ciągłość).
+8. Pierwsze włączenie: **zmierzyć napięcie DC na pinach 1 i 7** (wyjścia U1A/U1B) —
+   oczekiwana wartość ≈ V_MID (np. ~4,2 V przy pełnej baterii 2×18650).
+   > Jeśli zamiast tego napięcie jest bliskie szynie zasilania (V+ lub GND) — **STOP**.
+   > To dokładnie objaw błędu kolejności C_in/RV1 (patrz sekcja "Łańcuch wzmacniający" wyżej,
+   > opisany i naprawiony błąd #3) — oznacza błąd montażu, sprawdzić węzły 4-7 z netlistu.
+
 ## Bill of Materials (BOM)
 
 ### Elektronika preamp boxa
@@ -269,7 +374,7 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 - [x] BOM z kategoriami komponentów i orientacyjnym kosztorysem
 - [x] Plan montażu głowicy i preamp boxa
 - [x] Dokładne wartości R_fb/R_in dobrane (R_in=909Ω, R_fb=30,1kΩ, E96 1% — gain=33,11×/stopień, 60,80dB całkowite)
-- [ ] Finalny layout veroboard
+- [x] Finalny layout veroboard (netlist 24 połączeń, plan przecięć IC, strefy rozmieszczenia, kolejność montażu)
 - [ ] Zakup komponentów, weryfikacja symboli TME/Botland przed zamówieniem
 - [ ] Budowa i testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
 
