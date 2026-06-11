@@ -36,7 +36,7 @@ Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne se
 | Żywotność baterii | ~300 h pracy ciągłej / ~3.8 h ładowania |
 | Wyjście | TS 6.35mm mono (niebalansowane) → interfejs USB audio |
 | Wejście kapsułki | **TS 3.5mm** (kabel głowica stetoskopu ↔ preamp box) |
-| Obudowa | Metalowa Hammond 1590B (ekranowanie EMI, mieści baterie) |
+| Obudowa | Metalowa Hammond 1590BB (ekranowanie EMI, mieści baterie) |
 
 ## Architektura (modułowa)
 
@@ -107,7 +107,7 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 | Stetoskop (używany) | Allegro | 20–35 zł |
 | Kapsułka Panasonic WM-61A | TME.eu | 5–8 zł |
 | 1× NE5532N (DIP-8 + podstawka) | TME / Botland | 2–3 zł |
-| Obudowa metalowa Hammond 1590B lub equiv. | TME / Allegro | 25–45 zł |
+| Obudowa metalowa Hammond 1590BB lub equiv. | TME / Allegro | 25–45 zł |
 | Gniazdo TS 3.5mm (panel mount, mono!) | Botland / Allegro | 4–6 zł |
 | Gniazdo TS 6.35mm (panel mount) | Botland / Allegro | 4–6 zł |
 | Potencjometr 10 kΩ + pokrętło (gain trim, panel) | TME / Botland | 6–10 zł |
@@ -134,11 +134,10 @@ zdecydowano o przejściu na ogniwa Li-ion 18650: 2 ogniwa w serii (2S, 8.4V peł
 moduł BMS 2S (ochrona nad/pod-napięciowa), ładowanie przez moduł TP5100 z gniazda USB-C.  
 NE5532 zweryfikowano jako stabilny i bezpieczny w całym zakresie napięcia rozładowania (margines 3.5–6.3×).
 
-### Dlaczego wyjście niebalansowane TS zamiast XLR / phantom 48V?
-Phantom 48V wymagałby regulatora napięcia i ograniczał wybór wzmacniacza (NE5532 pobiera ~8mA —  
-na granicy normy IEC 61938). Przy odległości stetoskop–interfejs ≤ 2m zakłócenia na kablu TS są  
-pomijalne. XLR wymagałby dodatkowego inwertera fazowego (druga połówka NE5532) i droższego złącza —  
-zbędna komplikacja przy zasilaniu bateryjnym i krótkim kablu.
+### Dlaczego Opcja 1 ma wyjście niebalansowane TS zamiast XLR / phantom 48V?
+Opcja 1 celuje w prostotę budowy i autonomię (~300 h). Przy odległości stetoskop–interfejs ≤ 2–5 m zakłócenia na kablu TS są pomijalne. NE5532 (DIP-8) pobiera ~8 mA — na granicy normy phantom IEC 61938 (~10 mA per urządzenie). Zasilanie bateryjne eliminuje zależność od interfejsu z phantom power.
+
+Opcja 2 i 3 zapewniają wyjście zbalansowane XLR+TRS z CMRR ≥60 dB i pracą na kablach >50 m — opisane w dedykowanych sekcjach.
 
 ### Dlaczego WM-61A zamiast Primo EM-172?
 WM-61A (Panasonic): szum ~28 dB SPL, dostępna od ręki w TME (~5–8 zł).  
@@ -193,22 +192,23 @@ zaledwie −1.3 dB — zachowuje zarówno S4 (20–30 Hz), jak i S3 (25–50 Hz)
 6. Test szczelności: lekkie stuknięcie w membranę przy podłączonym wzmacniaczu — brak "świstów"  
    wskazuje na szczelne wklejenie.
 
-## Montaż — preamp box (Hammond 1590B)
+## Montaż — preamp box (Hammond 1590BB)
 
 ```
-  Widok od góry (panel wieczka):
-  ┌───────────────────────────────────────┐
-  │  [TS 3.5mm IN]   [LED]   [GAIN TRIM]   │ ← panel przedni
-  │                                         │
-  │  ┌──────────┐      ┌─────────────────┐ │
-  │  │ koszyczek│      │  veroboard:      │ │
-  │  │ 2×18650  │      │  1× NE5532       │ │
-  │  │ + BMS    │      │  + bias + filtry │ │
-  │  └──────────┘      └─────────────────┘ │
-  │                                         │
-  │  [TP5100 + USB-C]         [TS 6.35 OUT]│ ← panel tylny
-  │  [ON/OFF]                               │
-  └───────────────────────────────────────┘
+  Panel przedni (Hammond 1590BB, 119×94mm):
+  ┌──────────────────────┐
+  │  [TS 3.5mm IN]       │
+  │  [GAIN TRIM ▽]       │
+  │  [LED]               │
+  └──────────────────────┘
+
+  Panel tylny:
+  ┌──────────────────────────────┐
+  │  [USB-C]    [ON/OFF]         │
+  │  [TS 6.35mm OUT †]           │
+  └──────────────────────────────┘
+
+  † tylko Opcja 1. Opcje 2/3 mają TRS 6.35mm + XLR zamiast TS 6.35mm i brak USB-C (Opcja 2).
 ```
 
 Zasady krytyczne dla szumów:
@@ -381,7 +381,7 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 |---|---|---|
 | Gniazdo wejściowe | TS 3.5mm (mono!), panel mount | **uwaga: TS, nie TRS** |
 | Gniazdo wyjściowe | TS 6.35mm, panel mount | Neutrik lub equiv. |
-| Obudowa | Hammond 1590B lub równ. | metalowa, mieści 2×18650 |
+| Obudowa | Hammond 1590BB (119×94×34mm) | metalowa; jeden rozmiar dla wszystkich wariantów |
 | Kabel głowicy | TS 3.5mm, 1.5m, ekranowany | |
 | Wtyczka kabla głowicy | TS 3.5mm | |
 | Płytka prototypowa | veroboard, THT | |
