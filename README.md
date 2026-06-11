@@ -3,6 +3,28 @@
 Projekt akcesorium do magisterki **cHiFi-GAN dla dźwięków serca**.  
 Cel: nagrywanie próbek treningowych / inferencyjnych klasy normal / murmur / extrastole.
 
+## Warianty budowy
+
+Projekt oferuje trzy warianty budowy współdzielące tę samą kapsułkę WM-61A i rdzeń wzmacniający (60 dB, dwa stopnie ×33). Różnią się wyjściem i źródłem zasilania.
+
+| Parametr | Opcja 1 — TS, bateria | Opcja 2 — XLR+TRS, phantom | Opcja 3 — XLR+TRS, hybryda |
+|---|---|---|---|
+| Wyjście | TS 6.35mm (niebalansowane) | XLR 3-pin + TRS 6.35mm (zbalansowane) | XLR 3-pin + TRS 6.35mm (zbalansowane) |
+| Zasilanie | 2×18650 Li-ion (USB-C ładowanie) | Phantom 48V (IEC 61938) | Phantom 48V **lub** 2×18650 (auto-priorytet) |
+| IC | NE5532N (DIP-8) | MCP6004-I/P (DIP-14, quad) | MCP6004-I/P (DIP-14, quad) |
+| Max długość kabla | ~5 m | >50 m | >50 m |
+| CMRR | — | ≥60 dB | ≥60 dB |
+| USB-C ładowanie | ✓ | — | ✓ |
+| Autonomia bez phantom | ~300 h | 0 h | ~300 h |
+| Obudowa | Hammond 1590BB | Hammond 1590BB | Hammond 1590BB |
+| Koszt orientacyjny | ~159–259 zł | ~135–217 zł | ~196–320 zł |
+
+Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne sekcje na końcu dokumentu.
+
+---
+
+## Opcja 1 — TS 6.35mm, zasilanie bateryjne 2×18650
+
 ## Specyfikacja docelowa
 
 | Parametr | Wartość |
