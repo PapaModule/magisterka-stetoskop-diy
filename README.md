@@ -100,30 +100,65 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
    ("pop") przy podłączaniu/odłączaniu kabla do interfejsu. R_bleed definiuje DC=0V, pobiera prąd ≈0  
    (C_out blokuje DC w stanie ustalonym) — nie wpływa na sygnał ani poziom wyjściowy.
 
-## Kosztorys (orientacyjny, do potwierdzenia cen na TME/Botland)
+## Kosztorys orientacyjny
 
-| Komponent | Źródło | Koszt |
-|---|---|---|
-| Stetoskop (używany) | Allegro | 20–35 zł |
-| Kapsułka Panasonic WM-61A | TME.eu | 5–8 zł |
-| 1× NE5532N (DIP-8 + podstawka) | TME / Botland | 2–3 zł |
-| Obudowa metalowa Hammond 1590BB lub equiv. | TME / Allegro | 25–45 zł |
-| Gniazdo TS 3.5mm (panel mount, mono!) | Botland / Allegro | 4–6 zł |
-| Gniazdo TS 6.35mm (panel mount) | Botland / Allegro | 4–6 zł |
-| Potencjometr 10 kΩ + pokrętło (gain trim, panel) | TME / Botland | 6–10 zł |
-| 2× ogniwo 18650 (markowe, np. Samsung/Molicel) | sklep elektroniczny | 30–50 zł |
-| Koszyczek 2×18650 + moduł BMS 2S 8.4V | Botland / AliExpress | 15–25 zł |
-| Moduł ładowania TP5100 (2S) + gniazdo USB-C | Botland / AliExpress | 12–20 zł |
-| Wyłącznik ON/OFF | Botland | 3–5 zł |
-| Rezystory + kondensatory (assorted, w tym 3× 22µF/16V dwubiegunowe NP) | TME | 10–15 zł |
-| Płytka prototypowa veroboard | Botland / Allegro | 5–8 zł |
-| Kabel TS 3.5mm (1.5m, ekranowany, do stetoskopu) | Allegro | 6–10 zł |
-| Wtyczka TS 3.5mm (na kabel głowicy) | Allegro | 2–3 zł |
-| **Razem** | | **~145–250 zł** |
+Ceny do potwierdzenia na TME.eu / Botland.com.pl. Wysyłka TME darmowa od ~100 zł. Kabel wyjściowy do interfejsu pominięty.
 
-> Wzrost kosztu względem pierwotnej wersji (9V) wynika z przejścia na zasilanie 2×18650 + ładowanie USB-C  
-> (żywotność ~300h zamiast ~60h, ładowalne zamiast wymiany baterii) oraz większej obudowy.  
-> Kabel wyjściowy TS 6.35mm → interfejs pominięty (zakładamy posiadany). Wysyłka TME darmowa od ~100 zł.
+### Opcja 1 — TS, bateria 2×18650
+
+| Komponent | Koszt |
+|---|---|
+| Stetoskop (używany) | 20–35 zł |
+| Kapsułka Panasonic WM-61A | 5–8 zł |
+| 1× NE5532N (DIP-8) + podstawka | 2–3 zł |
+| Obudowa Hammond 1590BB | 35–55 zł |
+| Gniazdo TS 3.5mm (panel, mono) | 4–6 zł |
+| Gniazdo TS 6.35mm (panel) | 4–6 zł |
+| Potencjometr 10kΩ + pokrętło | 6–10 zł |
+| 2× ogniwo 18650 (Samsung/Molicel) | 30–50 zł |
+| Koszyczek 2×18650 + BMS 2S | 15–25 zł |
+| Moduł TP5100 (2S) + gniazdo USB-C | 12–20 zł |
+| Przełącznik ON/OFF | 3–5 zł |
+| Rezystory, kondensatory (BOM Opt1) | 10–15 zł |
+| Płytka veroboard | 5–8 zł |
+| Kabel TS 3.5mm głowicy (1,5m) + wtyczka | 8–13 zł |
+| **Razem** | **~159–259 zł** |
+
+### Opcja 2 — XLR+TRS, phantom
+
+| Komponent | Koszt |
+|---|---|
+| Stetoskop (używany) | 20–35 zł |
+| Kapsułka Panasonic WM-61A | 5–8 zł |
+| 1× MCP6004-I/P (DIP-14) + podstawka | 4–6 zł |
+| 1× MCP1703-5002E (TO-92) | 2–3 zł |
+| 1× BZX55C9V1 (zener 9V, SOD-80) | 1–2 zł |
+| Obudowa Hammond 1590BB | 35–55 zł |
+| Gniazdo TS 3.5mm (panel, mono) | 4–6 zł |
+| Gniazdo TRS 6.35mm (panel, stereo) | 5–8 zł |
+| Gniazdo XLR żeńskie Neutrik NC3FBH | 15–25 zł |
+| Potencjometr 10kΩ + pokrętło | 6–10 zł |
+| Rezystory 0,1% (R_dc×2, R_U2B×2) | 8–12 zł |
+| Rezystory 1%, kondensatory (BOM Opt2) | 12–18 zł |
+| Kondensatory 10µF/63V NP (C_hot, C_cold) | 4–6 zł |
+| Płytka veroboard (większa — DIP-14) | 6–10 zł |
+| Kabel TS 3.5mm głowicy (1,5m) + wtyczka | 8–13 zł |
+| **Razem** | **~135–217 zł** |
+
+> Opcja 2 jest najtańsza — brak ogniw 18650, BMS i TP5100. Wymaga interfejsu audio z phantom 48V (standard od klasy Focusrite Scarlett Solo).
+
+### Opcja 3 — XLR+TRS, hybryda
+
+Baza = Opcja 2, dodatkowe komponenty:
+
+| Komponent dodatkowy | Koszt |
+|---|---|
+| 2× ogniwo 18650 (Samsung/Molicel) | 30–50 zł |
+| Koszyczek 2×18650 + BMS 2S | 15–25 zł |
+| Moduł TP5100 (2S) + gniazdo USB-C | 12–20 zł |
+| 2× BAT85 Schottky | 2–4 zł |
+| Przełącznik ON/OFF | 3–5 zł |
+| **Razem Opcja 3** | **~197–321 zł** |
 
 ## Decyzje projektowe
 
