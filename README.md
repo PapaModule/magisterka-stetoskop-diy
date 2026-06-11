@@ -44,9 +44,9 @@ Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne se
 [Głowica stetoskopu]                [Preamp box]                     [Interfejs USB]
   WM-61A kapsułka         TS        ┌────────────────────────────┐
   wklejona w dzwonku    3.5mm       │ Gniazdo TS 3.5mm in        │
-  ──────── kabel 1.5m ─────────────>│ U1A(×33)→RV1→U1B(×55)      │── TS 6.35mm ──> wejście line
+  ──────── kabel 1.5m ─────────────>│ U1A(×33)→U1B(×55) = 65dB   │── TS 6.35mm ──> wejście line
   Tip: sygnał + zasilanie kapsuły   │   = 65 dB całkowite         │
-  Sleeve: GND                       │ RV1: gain trim między stopc. │
+  Sleeve: GND                       │ gain stały, trim w interfejsie│
                                     │ 2×18650 (2S) + BMS + TP5100 │
                                     │ Gniazdo USB-C (ładowanie)   │
                                     │ Gniazdo TS 6.35mm out       │
@@ -61,26 +61,14 @@ Preamp box zasila kapsułę przez żyłę Tip (rezystor pull-up R_pull = 2.2 kΩ
 
 ```
 Kapsuła → C_in(22µF NP) → R_in1(909Ω) → U1A (inwert. ×33, 30,4 dB)
-        → C_inter(22µF NP) → RV1 top
-                              RV1 wiper → R_in2(909Ω) → U1B (inwert. ×55, 34,8 dB)
-                              RV1 bottom → VMID
+        → C_inter(22µF NP) → R_in2(909Ω) → U1B (inwert. ×55, 34,8 dB)
         → C_out(22µF NP) → R_out(100Ω) ⊥ R_bleed(100kΩ→GND) → TS 6.35mm
 ```
 
 Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dzielnik R_VMID + bypass C_VMID).
 
-> **Krytyczne dla poprawnego działania — RV1 bottom musi iść do VMID, nie GND:**
-> W zasilaniu jednonapięciowym (single-supply) cały tor sygnałowy odnosi się do VMID = V+/2.
-> Przy bottom→GND: DC na wiperze = 0V, a U1B IN- (virtual ground) = VMID → stały prąd
-> VMID/R_in2 ≈ 2,75 mA (przy V+=5V) przez R_in2, U1B nasycony przy każdym ustawieniu suwaka.
-> Przy bottom→VMID: cały pot siedzi na DC=VMID, brak prądu DC przez R_in2, układ działa poprawnie.
-> VMID jest AC-ground przez C_VMID (fc=0,07Hz), więc AC zachowanie identyczne jak GND.
->
-> Dlaczego RV1 między stopniami (nie na wejściu jak wcześniej):
-> Na wejściu szum ścieraka był amplifikowany przez pełne ×1817 (65 dB). Między stopniami —
-> tylko przez ×33 (30 dB). Użytkownik reguluje suwak podczas nagrania, więc szum mechaniczny
-> musi być minimalizowany. Obciążenie kapsuły: stałe 651 Ω (vs zmienne 605–1800 Ω w starym projekcie
-> — przy max gain stary projekt pracował już przy 605 Ω, nowe 651 Ω nie jest regresem).
+> **Regulacja poziomu nagrania:** wyłącznie przez interfejs audio (gain na wejściu LINE).
+> Brak trymera w preampie — gain stały 65 dB (kapsuła przy ciele bezpośrednio, clip nierealny).
 
 ### Wyniki weryfikacji elektrycznej
 
@@ -88,7 +76,7 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 |---|---|
 | Wzmocnienie całkowite | ×1817 = **65,2 dB** ✓ (stopień 1: ×33/30,4dB + stopień 2: ×55/34,8dB; +5dB dla słabych S3/S4 i szmerów gr.I-II w zaszumionym datasecie) |
 | Filtr górnoprzepustowy (HPF) | C = 22 µF → tłumienie na 20 Hz tylko **−1.3 dB** (S3/S4 zachowane; przy 10 µF byłoby −4.9 dB — niedopuszczalne) |
-| Ryzyko clippingu | RV1 **między U1A a U1B** — U1A nigdy nie klipuje (µV na wejściu), U1B klipuje tylko przy >78 dB SPL z suwnikiem na max (trim redukuje gdy potrzeba) |
+| Ryzyko clippingu | Brak trymera — gain stały 65 dB. Clip przy >78 dB SPL przy kapsule — nierealny (kapsuła siedzi w dzwonku stetoskopu przy ciele; SPL ograniczony do ~50–75 dB) |
 | Poziomy wyjściowe | 29 mV @ 40 dB SPL · 91 mV @ 50 dB SPL · 289 mV @ 60 dB SPL · 1,62 V @ 75 dB SPL — zakres dla zaszumionych nagrań cHiFi-GAN |
 | Zapas napięciowy NE5532 | 3.5–6.3× margines względem sygnału w całym zakresie napięcia baterii (8.4V → 6.0V odcięcie BMS) |
 | Pasmo / stabilność | 303 kHz/stopień — 60× zapas nad wymaganym 5 kHz |
@@ -201,12 +189,10 @@ Przy 60 dB: V_out ≈ 17–55 mV przy 40–50 dB SPL → SNR ≈14 dB na szumie 
 
 Granica 70 dB wykluczona: przy 75 dB SPL z suwnikiem na górze V_out przekracza margines swing op-ampa. 65 dB to optymalny punkt: maksymalna czułość dla słabych dźwięków, trim redukuje gdy S1/S2 są głośne.
 
-### Dlaczego trymer wzmocnienia (RV1) między stopniami (U1A→U1B)?
-Pierwotnie RV1 był na wejściu układu, przed C_in i U1A. Ta pozycja eliminuje ryzyko clippingu wewnątrz U1A/U1B, ale ma krytyczną wadę: szum mechaniczny ścieraka (korozja, ruchy podczas nagrania) jest amplifikowany przez **pełne wzmocnienie 65 dB (×1817)**. Przy regulacji suwaka podczas nagrania było to słyszalne.
+### Dlaczego brak trymera gain (RV1)?
+Kapsuła WM-61A siedzi bezpośrednio w dzwonku stetoskopu przyłożonym do ciała pacjenta. SPL przy kapsule ograniczony do typowo 50–75 dB — klip (78 dB SPL) jest nierealny. Trymer był rozważany w rev6 i rev7, ale każda pozycja niosła wady: na wejściu amplifikował szum ścieraka ×1817; między stopniami — ×33 i wprowadzał zmienność HPF (−1,5 do −2,4 dB @ 20 Hz zależnie od suwaka); na wyjściu — ryzyko clipu wewnątrz op-ampa.
 
-Pozycja między stopniami: U1A wzmacnia sygnał ×33, RV1 tłumi, U1B wzmacnia ×55. Szum ścieraka amplifikowany tylko przez ×33 (30 dB) zamiast ×1817 (65 dB) — redukcja o **34,8 dB**. U1A nadal nie klipuje (na wejściu U1A są µV z kapsuły). U1B klipuje dopiero przy >78 dB SPL z suwnikiem na max — trim redukuje w razie potrzeby.
-
-Obciążenie kapsuły nie pogarsza się: przy starym projekcie z suwnikiem na max wynosiło ~605 Ω; nowy projekt daje stałe 651 Ω niezależnie od pozycji suwnika.
+Usunięcie RV1 eliminuje wszystkie te problemy. Regulacja poziomu nagrania odbywa się przez gain wejściowy interfejsu audio — co jest standardową praktyką dla mikrofonów o stałym wzmocnieniu.
 
 ### Dlaczego filtr górnoprzepustowy z C = 22 µF (a nie 10 µF)?
 Przy C_in = C_inter = 10 µF i R_eff = 909 Ω pojedynczy stopień ma f_c = 17.5 Hz, ale dwa kaskadowe  
