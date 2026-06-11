@@ -495,6 +495,147 @@ CMRR ≥ 60 dB: R_U2B_in = R_U2B_fb = 10kΩ **0,1%**. R_dc1 = R_dc2 = 6,81kΩ **
 | f_HPF wyjście | 1,6 Hz (−0,01 dB @ 20 Hz) |
 | Max długość kabla | >50 m (XLR ekranowany) |
 
+### BOM — Opcja 2
+
+#### Elektronika
+
+| Poz. | Element | Wartość/typ | Ilość |
+|---|---|---|---|
+| U1 | Quad op-amp (2 stopnie gain + balanced driver) | **MCP6004-I/P (DIP-14)** + podstawka DIP-14 | 1 |
+| VR1 | LDO 5V (Vin_max=16V — wymagany dla ~9V z zenera) | **MCP1703-5002E/TO (TO-92)** | 1 |
+| Z1 | Zener ochronny V_raw (WM-61A Vs_max=10V → 9V+1V zapas) | **BZX55C9V1 (9V, 500mW, SOD-80)** | 1 |
+| R_dc1, R_dc2 | DC tap phantom (symetryczne z R_ph, CMRR) | **6,81kΩ, 0,1%, E96** | 2 |
+| R_U2B_in, R_U2B_fb | Inwerter U2B (CMRR ≥60dB — parowanie 0,1%) | **10kΩ, 0,1%** | 2 |
+| R_pull_2 | Zasilanie kapsuły (V_raw=9V → Vdd_cap=3,5V) | 22kΩ, 1% | 1 |
+| R_in | Wejściowy każdego stopnia gain | 909Ω, E96, 1% | 2 |
+| R_fb | Sprzężenie zwrotne każdego stopnia (gain=33×) | 30,1kΩ, E96, 1% | 2 |
+| R_ser_hot, R_ser_cold | Izolacja wyjść HOT/COLD (stabilność do kapacytancji kabla) | 100Ω, 1% | 2 |
+| R_VMID | Dzielnik wirtualnej masy | 470kΩ, 1% | 2 |
+| R_bleed | DC=0V na SIG_OUT (anty-pop) | 100kΩ, 1% | 1 |
+| C_f1 | Bulk filter V_raw | 100µF / 25V elektrolit | 1 |
+| C_f2 | Decouple LDO wyjście | 100nF ceramiczny | 1 |
+| C_in, C_inter | Sprzęgające wejście/międzystopniowy | 22µF / 16V **NP** elektrolit | 2 |
+| C_out | Sprzęganie rdzenia → SIG_OUT | 22µF / 16V **NP** elektrolit | 1 |
+| C_hot, C_cold | DC block HOT/COLD — **~26V DC!** | **10µF / 63V NP** elektrolit | 2 |
+| C_VMID | Bypass VMID (fc=0,07Hz, PSRR) | 10µF / 25V **NP** elektrolit | 1 |
+| C_decouple | Odsprzęganie V+ blisko U1 pin4 | 100nF ceramiczny | 1 |
+| RV1 | Gain trim (panel) | 10kΩ, liniowy, mono | 1 |
+| J_XLR | Gniazdo XLR żeńskie, panel | **Neutrik NC3FBH** | 1 |
+| J_TRS | Gniazdo TRS 6.35mm, panel | stereo 6.35mm | 1 |
+| J_IN | Gniazdo wejściowe kapsuły | TS 3.5mm mono, panel | 1 |
+
+#### Mechanika
+
+| Element | Uwagi |
+|---|---|
+| Hammond 1590BB (119×94×34mm) | metalowa, jeden rozmiar dla wszystkich wariantów |
+| Veroboard ~5×7cm | DIP-14 zajmuje 7 kolumn + obwód phantom po tej samej płytce |
+| Kabel głowicy TS 3.5mm, 1,5m, ekranowany | |
+| Wtyczka TS 3.5mm (na kabel głowicy) | |
+
+### Layout veroboard — Opcja 2 (MCP6004 DIP-14)
+
+#### Przypisanie pinów MCP6004-I/P w tym układzie
+
+| Pin | Sygnał | Wzmacniacz |
+|---|---|---|
+| 1 | OUT_A | U1A — wyjście stopnia 1 (N2) |
+| 2 | IN-_A | U1A — wejście odwracające |
+| 3 | IN+_A | U1A — wejście nieodwracające (VMID) |
+| **4** | **VDD = V+** | **zasilanie +5V** |
+| 5 | IN+_B | U1B — wejście nieodwracające (VMID) |
+| 6 | IN-_B | U1B — wejście odwracające |
+| 7 | OUT_B | U1B — wyjście stopnia 2 (N4) |
+| 8 | OUT_C | U2A — wyjście voltage follower (HOT pre-Rser) |
+| 9 | IN-_C | U2A — wejście odwracające (= pin8, follower) |
+| 10 | IN+_C | U2A — wejście nieodwracające (SIG_OUT) |
+| **11** | **VSS = GND** | **punkt star-ground** |
+| 12 | IN+_D | U2B — wejście nieodwracające (VMID) |
+| 13 | IN-_D | U2B — wejście odwracające |
+| 14 | OUT_D | U2B — wyjście inwerter COLD |
+
+> **Zweryfikuj pinout w datasheecie MCP6004-I/P przed montażem.** Powyższy odpowiada standardowej kolejności quad op-amp DIP-14 (LM324/TL074 style). Pin 4 = VDD, pin 11 = VSS.
+
+#### Przecięcia pasków miedzi — DIP-14 (7 wymaganych)
+
+DIP-14 okracza 7 kolumn (A–G). Każdy pasek łączy pin górnego rzędu (1–7) z odpowiednim pinem dolnego rzędu (14–8). Wymagane **7 przecięć** — jedno na kolumnę:
+
+```
+Kolumna:  A    B    C    D    E    F    G
+          │    │    │    │    │    │    │
+pasek ────┼────┼────┼────┼────┼────┼────┼──[IC body]──┼────┼────┼────┼────┼────┼────┼──
+          │    │    │    │    │    │    │              │    │    │    │    │    │    │
+DIP-14: pin1 pin2 pin3 pin4 pin5 pin6 pin7          pin8 pin9 p10 p11 p12 p13 p14
+        N2  IN-A VMID V+  VMID IN-B  N4            HOT  IN-  SIG GND VMID IN-D COLD
+                                                    pre  C+   OUT           pre
+
+✂ = przecięcie paska między rzędem pin1-7 a pin8-14, w każdej z 7 kolumn A–G
+```
+
+> **Częsty błąd:** DIP-14 wymaga 7 przecięć (vs 4 dla DIP-8 NE5532). Zweryfikować miernikiem
+> ciągłości KAŻDĄ z par: **1–14, 2–13, 3–12, 4–11, 5–10, 6–9, 7–8** — każda musi być **rozwarta**
+> przed włożeniem układu w podstawkę.
+
+#### Netlist Opcji 2 — 40 połączeń
+
+Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/2, `V_raw`=9V po zenerze, `V+`=5V z LDO, `HOT`/`COLD`=XLR+TRS wyjście.
+
+| # | Połączenie | Uwagi |
+|---|---|---|
+| 1 | TS 3.5mm IN (tip) → CAP | sygnał z głowicy |
+| 2 | TS 3.5mm IN (sleeve) → GND | masa sygnałowa |
+| 3 | CAP → R_pull_2 (22kΩ) → V_raw | zasilanie kapsuły FET |
+| 4 | CAP → RV1 terminal górny | bezpośrednie AC+DC |
+| 5 | RV1 terminal dolny → GND | dzielnik napięcia |
+| 6 | RV1 suwak → C_in (+) | AC-sprzężenie PO trymerze |
+| 7 | C_in (−) → R_in (909Ω) → N1 | wejście U1A |
+| 8 | N1 → R_fb (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
+| 9 | U1A IN+ (pin3) → VMID | bias nieodwracający |
+| 10 | U1A OUT (pin1) = N2 | wyjście stopnia 1 |
+| 11 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
+| 12 | C_inter (−) → R_in (909Ω) → N3 | wejście U1B |
+| 13 | N3 → R_fb (30,1kΩ) → N4 | sprzężenie zwrotne U1B |
+| 14 | U1B IN+ (pin5) → VMID | bias nieodwracający |
+| 15 | U1B OUT (pin7) = N4 | wyjście stopnia 2 |
+| 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
+| 17 | C_out (−) = SIG_OUT | wyjście rdzenia |
+| 18 | SIG_OUT → R_bleed (100kΩ) → GND | anty-pop |
+| 19 | SIG_OUT → U2A IN+ (pin10) | wejście voltage follower HOT |
+| 20 | U2A IN- (pin9) = U2A OUT (pin8) | sprzężenie ujemne follower |
+| 21 | U2A OUT (pin8) → R_ser_hot (100Ω) → C_hot (+) | HOT przed DC-blokiem |
+| 22 | C_hot (−) → XLR pin2 + TRS tip | wyjście HOT |
+| 23 | SIG_OUT → R_U2B_in (10kΩ, 0,1%) → U2B IN- (pin13) | wejście inwertera COLD |
+| 24 | U2B OUT (pin14) → R_U2B_fb (10kΩ, 0,1%) → U2B IN- (pin13) | sprzężenie inwertera |
+| 25 | U2B IN+ (pin12) → VMID | ref inwertera ×-1 |
+| 26 | U2B OUT (pin14) → R_ser_cold (100Ω) → C_cold (+) | COLD przed DC-blokiem |
+| 27 | C_cold (−) → XLR pin3 + TRS ring | wyjście COLD |
+| 28 | XLR pin1 = TRS sleeve = GND | masa sygnałowa wyjścia |
+| 29 | XLR pin2 → R_dc1 (6,81kΩ, 0,1%) → V_raw | phantom DC tap HOT |
+| 30 | XLR pin3 → R_dc2 (6,81kΩ, 0,1%) → V_raw | phantom DC tap COLD |
+| 31 | V_raw → Z1 (BZX55C9V1, 9V, 500mW) → GND | ochrona Vs_max WM-61A |
+| 32 | V_raw → C_f1 (100µF/25V) → GND | bulk filter |
+| 33 | V_raw → MCP1703 Vin | wejście LDO |
+| 34 | MCP1703 Vout = V+ | 5V dla MCP6004 i VMID |
+| 35 | V+ → C_f2 (100nF) → GND | decouple LDO |
+| 36 | VMID = dzielnik R_VMID(470kΩ) + R_VMID(470kΩ) z V+ → GND | wirtualna masa |
+| 37 | VMID → C_VMID (10µF NP / 25V) → GND | bypass VMID, fc=0,07Hz |
+| 38 | U1 pin4 (VDD) → V+; C_decouple (100nF) → GND blisko pinu | odsprzęganie zasilania |
+| 39 | U1 pin11 (VSS) → GND — **punkt star-ground** | wszystkie GND zbiegają tu |
+| 40 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI |
+
+#### Kolejność montażu — Opcja 2
+
+1. Wykonać **7 przecięć** w obszarze DIP-14 (kolumny A–G, między rzędami pinów).
+2. **Zweryfikować miernikiem** — 7 par (1-14, 2-13, 3-12, 4-11, 5-10, 6-9, 7-8) musi być rozwarcie.
+3. Zamontować podstawkę DIP-14 (bez układu scalonego).
+4. Wlutować TO-92 (MCP1703) i SOD-80 (BZX55C9V1).
+5. Wlutować rezystory 0,1% jako pierwsze (R_dc1/R_dc2, R_U2B_in/fb), następnie resztę rezystorów.
+6. Wlutować kondensatory ceramiczne (C_f2, C_decouple).
+7. Wlutować kondensatory elektrolityczne: C_f1 (100µF/25V, spolaryzowany), C_VMID (10µF NP), C_in/C_inter/C_out (22µF NP), C_hot/C_cold (10µF/**63V** NP — **uwaga na napięcie!**).
+8. Połączenia zewnętrzne: RV1, J_IN, J_XLR (Neutrik NC3FBH), J_TRS.
+9. **Ciągłość całego netlistu miernikiem PRZED włożeniem MCP6004 w podstawkę.**
+10. Pierwsze włączenie (XLR do interfejsu z phantom 48V): zmierzyć V_raw ≈ 9V, V+ ≈ 5V, VMID ≈ 2,5V. Jeśli V_raw > 10V — **STOP**, sprawdzić Z1.
+
 ## Powiązane projekty
 
 - [magisterka-hifigan-demo](https://github.com/PapaModule/magisterka-hifigan-demo) — strona demo cHiFi-GAN
