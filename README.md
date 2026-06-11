@@ -220,7 +220,6 @@ zaledwie −1.3 dB — zachowuje zarówno S4 (20–30 Hz), jak i S3 (25–50 Hz)
   Panel przedni (Hammond 1590BB, 119×94mm):
   ┌──────────────────────┐
   │  [TS 3.5mm IN]       │
-  │  [GAIN TRIM ▽]       │
   │  [LED]               │
   └──────────────────────┘
 
@@ -240,7 +239,6 @@ Zasady krytyczne dla szumów:
   ścieżki (przed stopniem 2 (×55) każdy piko-wolt zakłóceń też zostanie wzmocniony).
 - **Jeden punkt masy (star ground)** — wszystkie GND zbiegają się przy U1, brak pętli masy.
 - **Obudowa uziemiona do GND sygnałowego w jednym punkcie** — ekranowanie EMI bez pętli masy.
-- **GAIN TRIM (RV1) na panelu przednim** — łatwy dostęp do regulacji poziomu podczas nagrywania.
 
 ## Layout płytki veroboard (paski miedzi)
 
@@ -399,7 +397,7 @@ R_in = 909 Ω z C_in/C_inter = 22µF → HPF f_c = 7,96 Hz/stopień, łączny �
 - [x] Architektura modułowa (głowica TS 3.5mm + preamp box)
 - [x] Rdzeń wzmacniający 65 dB (stopień 1 ×33 + stopień 2 ×55, NE5532 / MCP6004)
 - [x] Filtr HPF dobrany pod tony S3/S4 (C=22µF, −1,3 dB @ 20Hz)
-- [x] Trymer wzmocnienia RV1 między U1A a U1B (redukcja szumu ścieraka o 34,8 dB)
+- [x] Brak trymera gain — gain stały 65 dB (clip nierealny przy SPL stetoskopu ~50–75 dB)
 - [x] Wartości R_in=909Ω, R_fb1=30,1kΩ/R_fb2=49,9kΩ E96 1% (gain ×33/×55, 65,2 dB łącznie)
 - [x] C_VMID = 10µF NP w rdzeniu wspólnym (bypass VMID, fc=0,07Hz)
 - [x] Obudowa Hammond 1590BB — jeden rozmiar dla wszystkich wariantów
@@ -408,7 +406,7 @@ R_in = 909 Ω z C_in/C_inter = 22µF → HPF f_c = 7,96 Hz/stopień, łączny �
 ### Opcja 1 — TS 6.35mm, bateria 2×18650
 - [x] Schemat elektryczny (NE5532N DIP-8, zweryfikowany)
 - [x] BOM z kosztorysem (~159–259 zł)
-- [x] Layout veroboard (netlist 22 połączenia, 4 przecięcia DIP-8, kolejność montażu)
+- [x] Layout veroboard (netlist 22 połączeń, 4 przecięcia DIP-8, kolejność montażu)
 - [ ] Zakup komponentów (weryfikacja cen TME/Botland)
 - [ ] Budowa i test: SNR vs dataset mediana (normal = −2,7 dB)
 
