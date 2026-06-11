@@ -7,7 +7,7 @@ metadata:
 
 # Spec: Warianty wyjścia stetoskopu — TS / TRS+XLR phantom / TRS+XLR hybryda
 
-**Data:** 2026-06-08 (rev 5: 2026-06-11)**  
+**Data:** 2026-06-08 (rev 6: 2026-06-11)**  
 **Projekt:** `PapaModule/magisterka-stetoskop-diy`  
 **Status:** zweryfikowany, zatwierdzony do implementacji
 
@@ -22,6 +22,7 @@ metadata:
 | 3 | Korekta błędu Thevenin V_th=24V→48V; usunięcie ślepych zaułków analizy; C_hot/cold 1µF→10µF; dokumentacja DC na kondensatorach wyjściowych |
 | 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=28,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
 | 5 | Korekta stałej V_bus_phantom 14,7V→8,7V w opisie Opt3 (stała z ery zenera 15V); Icc MCP6004 600→680µA (datasheet max @5V: 170µA/wzmacniacz×4); adnotacja o marginesie diode-OR 0,6V |
+| 6 | Dodanie C_VMID = 10µF NP do rdzenia wspólnego (odsprzęganie szyny VMID) |
 
 ---
 
@@ -39,6 +40,20 @@ Wejście kapsuły: TS 3.5mm (tip=sygnał+zasilanie, sleeve=GND)
 
 Opcja 1: NE5532 (DIP-8), R_pull=2,2kΩ→V+.  
 Opcje 2 i 3: MCP6004 (DIP-14, quad), R_pull_2=22kΩ→V_raw.
+
+**C_VMID — obowiązkowo we wszystkich wariantach:**  
+VMID generowane przez dzielnik R_VMID (470kΩ||470kΩ = 235kΩ). Bez kondensatora
+odsprzęgającego tętnienie V+ sprzęga się przez VMID do wejść odwracających obu
+stopni wzmocnienia i inwertera cold (U2B). Przy 60dB wzmocnienia i PSRR MCP6004
+~70dB @ 1kHz wpływ jest pomijalny, ale przy NF jest widoczny na niskich
+częstotliwościach (PSRR MCP6004 spada do ~40dB @ 100Hz).
+
+```
+VMID → C_VMID (10µF NP, 25V) → GND
+```
+
+C_VMID tworzy z R_VMID filtr LP: fc = 1/(2π × 235k × 10µF) = **0,07Hz** — praktycznie
+DC przy każdej częstotliwości audio. Dodać do każdej płytki veroboard.
 
 ---
 
