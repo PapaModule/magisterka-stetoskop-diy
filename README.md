@@ -17,7 +17,7 @@ Projekt oferuje trzy warianty budowy współdzielące tę samą kapsułkę WM-61
 | USB-C ładowanie | ✓ | — | ✓ |
 | Autonomia bez phantom | ~300 h | 0 h | ~300 h |
 | Obudowa | Hammond 1590BB | Hammond 1590BB | Hammond 1590BB |
-| Koszt orientacyjny | ~159–259 zł | ~135–217 zł | ~196–320 zł |
+| Koszt orientacyjny | ~153–249 zł | ~129–207 zł | ~196–320 zł |
 
 Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne sekcje na końcu dokumentu.
 
@@ -30,7 +30,7 @@ Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne se
 | Parametr | Wartość |
 |---|---|
 | Kapsułka | Panasonic WM-61A (elektret, −42 dBV/Pa, szum ~28 dB SPL) |
-| Wzmocnienie | **65 dB (×1817)**, stopień 1: ×33/30,4dB + stopień 2: ×55/34,8dB; trymer między stopniami |
+| Wzmocnienie | **65 dB (×1817)** stały, stopień 1: ×33/30,4dB + stopień 2: ×55/34,8dB; bez trymera |
 | Pasmo użyteczne | ~12 Hz – 5 kHz (filtr górnoprzepustowy 22 µF zachowuje tony S3/S4) |
 | Zasilanie | **2× ogniwo Li-ion 18650 (2S, 8.4V→6.0V)**, BMS 2S, ładowanie TP5100 + USB-C |
 | Żywotność baterii | ~300 h pracy ciągłej / ~3.8 h ładowania |
@@ -107,7 +107,6 @@ Ceny do potwierdzenia na TME.eu / Botland.com.pl. Wysyłka TME darmowa od ~100 z
 | Obudowa Hammond 1590BB | 35–55 zł |
 | Gniazdo TS 3.5mm (panel, mono) | 4–6 zł |
 | Gniazdo TS 6.35mm (panel) | 4–6 zł |
-| Potencjometr 10kΩ + pokrętło | 6–10 zł |
 | 2× ogniwo 18650 (Samsung/Molicel) | 30–50 zł |
 | Koszyczek 2×18650 + BMS 2S | 15–25 zł |
 | Moduł TP5100 (2S) + gniazdo USB-C | 12–20 zł |
@@ -115,7 +114,7 @@ Ceny do potwierdzenia na TME.eu / Botland.com.pl. Wysyłka TME darmowa od ~100 z
 | Rezystory, kondensatory (BOM Opt1) | 10–15 zł |
 | Płytka veroboard | 5–8 zł |
 | Kabel TS 3.5mm głowicy (1,5m) + wtyczka | 8–13 zł |
-| **Razem** | **~159–259 zł** |
+| **Razem** | **~153–249 zł** |
 
 ### Opcja 2 — XLR+TRS, phantom
 
@@ -130,13 +129,12 @@ Ceny do potwierdzenia na TME.eu / Botland.com.pl. Wysyłka TME darmowa od ~100 z
 | Gniazdo TS 3.5mm (panel, mono) | 4–6 zł |
 | Gniazdo TRS 6.35mm (panel, stereo) | 5–8 zł |
 | Gniazdo XLR żeńskie Neutrik NC3FBH | 15–25 zł |
-| Potencjometr 10kΩ + pokrętło | 6–10 zł |
 | Rezystory 0,1% (R_dc×2, R_U2B×2) | 8–12 zł |
 | Rezystory 1%, kondensatory (BOM Opt2) | 12–18 zł |
 | Kondensatory 10µF/63V NP (C_hot, C_cold) | 4–6 zł |
 | Płytka veroboard (większa — DIP-14) | 6–10 zł |
 | Kabel TS 3.5mm głowicy (1,5m) + wtyczka | 8–13 zł |
-| **Razem** | **~135–217 zł** |
+| **Razem** | **~129–207 zł** |
 
 > Opcja 2 jest najtańsza — brak ogniw 18650, BMS i TP5100. Wymaga interfejsu audio z phantom 48V (standard od klasy Focusrite Scarlett Solo).
 
@@ -356,7 +354,6 @@ Krytyczny punkt: nóżki 1↔8, 2↔7, 3↔6, 4↔5 leżą na tych samych paskac
 | Poz. | Element | Wartość/typ | Ilość |
 |---|---|---|---|
 | U1 | Wzmacniacz operacyjny (dual op-amp — oba wzmacniacze U1A+U1B użyte jako 2 stopnie) | NE5532N (DIP-8, THT) + podstawka | 1 |
-| RV1 | Potencjometr GAIN TRIM | 10 kΩ, liniowy, mono, panel mount | 1 |
 | C_in, C_inter, C_out | Kondensator sprzęgający | 22 µF / 16 V, **elektrolit. DWUBIEGUNOWY (NP/bipolar)**, THT | 3 |
 | — | Kondensatory odsprzęgające zasilanie | 100 nF ceram. + 100 µF elektrolit | po 2 |
 | R_in | Rezystor wejściowy stopnia (ustala HPF, zgodny z R_eff=909Ω z analizy filtra) | **909 Ω**, E96, 1%, 0.25W | 2 |
@@ -369,26 +366,10 @@ Krytyczny punkt: nóżki 1↔8, 2↔7, 3↔6, 4↔5 leżą na tych samych paskac
 | R_bleed | Rezystor definiujący DC=0V na wyjściu (zapobiega "pop" przy podłączaniu kabla) | 100 kΩ, 1% | 1 |
 
 **Dobór R_in/R_fb — uzasadnienie:**
-R_in = 909 Ω wynika z analizy filtra HPF (R_eff=909Ω, z C=22µF daje f_c≈7,96Hz/stopień → −1,8dB @ 20Hz kaskadowo — zachowuje S3/S4). Dwa różne R_fb dla różnych wzmocnień:
-- **R_fb1 = 30,1 kΩ** → U1A: gain = 30,1k/909 = 33,1× = 30,4 dB
-- **R_fb2 = 49,9 kΩ** → U1B: gain = 49,9k/909 = 54,9× = 34,8 dB
-- Łączne: 33,1 × 54,9 = **1817× = 65,2 dB**
-
-Uzasadnienie 65 dB (nie 60 dB): dataset cHiFi-GAN jest zaszumiony, zawiera słabe S3/S4 i szmery klas I-II (SPL ~40-55 dB). Przy 60 dB wyjście = 17–55 mV → SNR ≈14 dB dla najsłabszych dźwięków; przy 65 dB: 54–173 mV → SNR ≈20 dB.
-
-Dodatkowe kontrole: moc rozpraszana w R_in/R_fb przy max sygnale to odpowiednio ~1,2µW / ~0,04µW —  
-margines >200×/>6000× względem ratingu 0,25W. Szum Johnsona obu rezystorów (274nV / 1574nV RMS w  
-paśmie 5kHz) jest porównywalny z szumem własnym NE5532 (354nV) — oba nieistotne wobec self-noise  
-kapsuły WM-61A (dominujące źródło szumu układu).
-
-> **Ważne — sposób podłączenia RV1:** trymer MUSI być podłączony jako dzielnik napięcia  
-> (3 wyprowadzenia: górne = bezpośrednio z węzła kapsuły/R_pull, dolne = GND, suwak = do C_in →  
-> R_in → U1A), NIE jako rezystor szeregowy (2 wyprowadzenia) i NIE z C_in przed potencjometrem  
-> (patrz ramka wyżej — to uniemożliwiłoby działanie układu). Tylko przy takim podłączeniu obciążenie  
-> AC/DC kapsuły jest stałe — R_pull(2,2kΩ) ‖ pełna rezystancja RV1(10kΩ) = **1803 Ω** niezależnie od  
-> ustawienia suwaka, w zalecanym zakresie obciążenia WM-61A. Przy podłączeniu szeregowym obciążenie  
-> zmieniałoby się wraz z pozycją trymera (od 643Ω do 1831Ω), schodząc w skrajnym ustawieniu poniżej  
-> zalecanego minimum.
+R_in = 909 Ω z C_in/C_inter = 22µF → HPF f_c = 7,96 Hz/stopień, łączny −3dB ≈ 11,3 Hz, −1,4 dB @ 20 Hz (stały, niezależny od czegokolwiek). Zachowuje S3/S4.
+- **R_fb1 = 30,1 kΩ** → U1A: gain = 33,1× = 30,4 dB
+- **R_fb2 = 49,9 kΩ** → U1B: gain = 54,9× = 34,8 dB
+- Łącznie: ×1817 = **65,2 dB** (stały, bez trymera)
 
 ### Zasilanie
 
@@ -569,7 +550,6 @@ CMRR ≥ 60 dB: R_U2B_in = R_U2B_fb = 10kΩ **0,1%**. R_dc1 = R_dc2 = 6,81kΩ **
 | C_hot, C_cold | DC block HOT/COLD — **~26V DC!** | **10µF / 63V NP** elektrolit | 2 |
 | C_VMID | Bypass VMID (fc=0,07Hz, PSRR) | 10µF / 25V **NP** elektrolit | 1 |
 | C_decouple | Odsprzęganie V+ blisko U1 pin4 | 100nF ceramiczny | 1 |
-| RV1 | Gain trim (panel) | 10kΩ, liniowy, mono | 1 |
 | J_XLR | Gniazdo XLR żeńskie, panel | **Neutrik NC3FBH** | 1 |
 | J_TRS | Gniazdo TRS 6.35mm, panel | stereo 6.35mm | 1 |
 | J_IN | Gniazdo wejściowe kapsuły | TS 3.5mm mono, panel | 1 |
