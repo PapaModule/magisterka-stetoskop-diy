@@ -23,7 +23,7 @@ metadata:
 | 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=28,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
 | 5 | Korekta stałej V_bus_phantom 14,7V→8,7V w opisie Opt3 (stała z ery zenera 15V); Icc MCP6004 600→680µA (datasheet max @5V: 170µA/wzmacniacz×4); adnotacja o marginesie diode-OR 0,6V |
 | 6 | Dodanie C_VMID = 10µF NP do rdzenia wspólnego (odsprzęganie szyny VMID) |
-| 7 | RV1 przeniesiony między U1A a U1B (klasyczna topologia niskoszumowa); R_fb2 30,1kΩ→49,9kΩ; wzmocnienie 60→65 dB; nowe ostrzeżenie RV1 bottom→VMID |
+| 7 | RV1 przeniesiony między U1A a U1B (klasyczna topologia niskoszumowa); R_fb2 30,1kΩ→49,9kΩ; wzmocnienie 60→65 dB; nowe ostrzeżenie RV1 bottom→VMID; analiza HPF vs pozycja suwaka (−1,5 do −2,4 dB @ 20Hz) |
 
 ---
 
@@ -90,16 +90,30 @@ szumu ścieraka**.
 
 ### HPF — analiza (rev7)
 
-Łańcuch ma dwa etapy HPF:
+Łańcuch ma dwa etapy HPF. Etap 1 (C_in/R_in1) jest stały. Etap 2 (C_inter/R_eff_wejście_U1B)
+**zależy od pozycji suwaka RV1** — impedancja wejścia U1B zmienia się z pozycją wiper.
 
 | Etap | C | R_eff | f_c |
 |---|---|---|---|
-| Wejście U1A | C_in=22µF | R_in1=909Ω | 7,96 Hz |
-| Wejście U1B (przy suwaku max) | C_inter=22µF | R_in2 || pot_input_Z ≈ 833Ω | 8,7 Hz |
+| Wejście U1A (stały) | C_in=22µF | R_in1=909Ω | 7,96 Hz |
+| Wejście U1B (suwak max, α=1) | C_inter=22µF | 833Ω | 8,7 Hz |
+| Wejście U1B (suwak środek, α=0,5) | C_inter=22µF | 665Ω | 10,9 Hz |
+| Wejście U1B (suwak min, α→0) | C_inter=22µF | ~480Ω | 15 Hz |
 
-Kaskada dwóch HPF o zbliżonych f_c: łączny −3dB ≈ **12 Hz**, tłumienie @ 20 Hz ≈ **−1,8 dB**.
-S3 (25–50 Hz) i S4 (20–30 Hz) zachowane z zapasem. Nieznacznie gorsze od rev6 (−1,3 dB @ 20Hz)
-ze względu na drugą HPF na wejściu U1B — akceptowalne.
+Tłumienie @ 20 Hz w zależności od pozycji suwaka:
+
+| Pozycja RV1 | f_c2 | Tłumienie @ 20 Hz |
+|---|---|---|
+| Max gain (suwak górny) | 8,7 Hz | **−1,5 dB** |
+| Środek | 10,9 Hz | **−1,8 dB** |
+| ¼ zakresu | 11,8 Hz | **−1,9 dB** |
+| Min gain (suwak dolny) | ~15 Hz | **−2,4 dB** |
+
+> **Praktyczna konsekwencja:** przy obniżeniu gain (suwak w dół — dla głośnych pacjentów)
+> jednocześnie nieznacznie zwiększa się tłumienie S4 (20–30 Hz). Różnica 1,5→2,4 dB
+> to 0,9 dB w skrajnych przypadkach — akceptowalne dla cHiFi-GAN SR=4kHz. S3/S4
+> zachowane we wszystkich pozycjach suwaka. Dla najczystszych tonów niskich — suwak
+> na górze (max gain) i redukcja gain w interfejsie, nie przez RV1.
 
 ### C_VMID — obowiązkowo we wszystkich wariantach
 
