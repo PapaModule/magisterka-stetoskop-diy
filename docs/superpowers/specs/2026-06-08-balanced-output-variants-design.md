@@ -7,7 +7,7 @@ metadata:
 
 # Spec: Warianty wyjścia stetoskopu — TS / TRS+XLR phantom / TRS+XLR hybryda
 
-**Data:** 2026-06-08 (rev 3: 2026-06-11)**  
+**Data:** 2026-06-08 (rev 5: 2026-06-11)**  
 **Projekt:** `PapaModule/magisterka-stetoskop-diy`  
 **Status:** zweryfikowany, zatwierdzony do implementacji
 
@@ -20,7 +20,8 @@ metadata:
 | 1 | Pierwotny draft |
 | 2 | Korekta 3 blokerów: L→R_dc, MCP1700→MCP1703, TL072→MCP6004 |
 | 3 | Korekta błędu Thevenin V_th=24V→48V; usunięcie ślepych zaułków analizy; C_hot/cold 1µF→10µF; dokumentacja DC na kondensatorach wyjściowych |
-| 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=31,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
+| 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=28,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
+| 5 | Korekta stałej V_bus_phantom 14,7V→8,7V w opisie Opt3 (stała z ery zenera 15V); Icc MCP6004 600→680µA (datasheet max @5V: 170µA/wzmacniacz×4); adnotacja o marginesie diode-OR 0,6V |
 
 ---
 
@@ -99,8 +100,8 @@ Przy I_load→0: V_raw→48V → niszczy MCP1703 (Vin_max=16V). Zener BZX55C9V1 
 klamruje V_raw do 9V — w spec WM-61A (Vs_max=10V) z 1V zapasem.
 Przy pełnym obciążeniu 1,13mA:
 ```
-I_zener = 5,72 − 1,13 = 4,59mA,   P_zener = 9V × 4,59mA = 41,3mW  (< 500mW) ✓
-Margines prądowy: (5,72 − 1,13) / 5,72 = 80% ✓
+I_zener = 5,72 − 1,21 = 4,51mA,   P_zener = 9V × 4,51mA = 40,6mW  (< 500mW) ✓
+Margines prądowy: (5,72 − 1,21) / 5,72 = 79% ✓
 ```
 
 > **Dlaczego 9V (nie 15V):** WM-61A datasheet: Vs_max = 10V. V_raw = 15V aplikowałoby
@@ -171,12 +172,12 @@ CMRR: R_U2B_in = R_U2B_fb = 10kΩ, **0,1%** → CMRR ≥ 60dB.
 | Komponent | I_max |
 |---|---|
 | R_pull_2 (22kΩ, V_raw=9V) | 0,409mA |
-| MCP6004 quad (Icc worst-case) | 0,600mA |
+| MCP6004 quad (Icc worst-case, 170µA/amp×4 @5V) | 0,680mA |
 | MCP1703 (LDO quiescent) | 0,120mA |
 | R_VMID (470kΩ×2, V+=5V) | 0,005mA |
-| **Razem** | **1,134mA** |
+| **Razem** | **1,214mA** |
 | **I_available** | **5,720mA** |
-| **Margines worst-case** | **80%** |
+| **Margines worst-case** | **79%** |
 
 ### Komponenty opcji 2
 
@@ -204,7 +205,7 @@ CMRR: R_U2B_in = R_U2B_fb = 10kΩ, **0,1%** → CMRR ≥ 60dB.
 |---|---|
 | Zasilanie | Phantom 48V (IEC 61938) |
 | I_available z phantomu | 5,72mA |
-| I_total worst-case | 1,13mA (margines **80%**) |
+| I_total worst-case | 1,21mA (margines **79%**) |
 | V_raw (kapsuła + LDO_in) | 9V (zener BZX55C9V1, margines 1V do WM-61A Vs_max=10V) |
 | V+ (op-ampy) | 5V (MCP1703) |
 | CMRR | ≥60dB (R_dc i R_U2B oba 0,1%) |
@@ -240,8 +241,15 @@ TP5100 + USB-C → ładowanie baterii (niezależnie od phantom)
 | Bateria pełna (8,4V) | 8,4−0,3 = **8,1V** | ✓ | 7,9V |
 | Bateria min (6,0V) | 6,0−0,3 = **5,7V** | dropout@1,2mA≈5mV → Vout=5,7V≈5V ✓ | 695mV |
 
-Priorytet automatyczny: V_bus_phantom (14,7V) >> V_bus_bat_max (8,1V) → D1 prowadzi,
+Priorytet automatyczny: V_bus_phantom (8,7V) > V_bus_bat_max (8,1V) → D1 prowadzi,
 D2 zablokowana. Przełączenie phantom→bateria: bufor C_bus (100µF), brak glitchu audio.
+
+> **Uwaga — cienki margines diode-OR:** różnica V_bus wynosi tylko **0,6V**.
+> BAT85 prąd wsteczny (I_r) w temperaturze pokojowej: <200nA — pomijalny.
+> Przy +85°C I_r rośnie do ~µA (typowy wzrost 100–1000× dla Schottky), nadal
+> pomijalny wobec I_total=1,21mA. Priorytet działa prawidłowo w zakresie temperatur
+> roboczych (−20…+60°C dla zastosowania stetoskopowego).
+> Alternatywa (konserwatywna): D2 = 1N4148 (Vf≈0,6V) → V_bus_bat=7,8V, margines 0,9V.
 
 ### Komponenty dodatkowe opcji 3
 
