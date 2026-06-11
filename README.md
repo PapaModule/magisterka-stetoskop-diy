@@ -400,6 +400,101 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 - [ ] Zakup komponentów, weryfikacja symboli TME/Botland przed zamówieniem
 - [ ] Budowa i testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
 
+---
+
+## Opcja 2 — XLR+TRS zbalansowane, zasilanie wyłącznie phantom 48V
+
+### Architektura
+
+```
+[Interfejs audio]         [Preamp box — Opcja 2]                    [Interfejs audio]
+  Phantom 48V       XLR   ┌──────────────────────────────────────┐
+  R_ph=6,81kΩ ──────────>│ R_dc1/R_dc2 (6,81kΩ 0,1%) → V_raw   │
+                           │ Z1(BZX55C9V1 9V) + C_f1 + LDO 5V    │
+[Głowica]         TS      │ MCP6004 quad DIP-14:                  │
+  WM-61A     3.5mm────>   │  U1A×33 → U1B×33 (60 dB rdzeń)       │──XLR pin2/TRS tip──>
+                           │  U2A (follower HOT)                   │
+                           │  U2B (inwerter COLD ×-1)              │──XLR pin3/TRS ring─>
+                           └──────────────────────────────────────┘
+```
+
+Wspólny rdzeń (WM-61A → U1A×33 → U1B×33) taki sam jak w Opcji 1. IC zmienia się z NE5532N (DIP-8) na MCP6004-I/P (DIP-14, quad) — dwa dodatkowe wzmacniacze obsługują balanced driver. Zasilanie pochodzi wyłącznie z phantom 48V.
+
+### Phantom receiver — jak to działa
+
+Interfejs wysyła 48V przez R_ph=6,81kΩ na XLR pin2 i pin3. Urządzenie podłącza te piny przez R_dc1/R_dc2=6,81kΩ do wspólnego węzła V_raw:
+
+```
+48V → R_ph1(6,81kΩ) → XLR pin2 → R_dc1(6,81kΩ, 0,1%) ─┐
+48V → R_ph2(6,81kΩ) → XLR pin3 → R_dc2(6,81kΩ, 0,1%) ─┴─→ V_raw
+                                                              ├─ Z1: BZX55C9V1 (9V, 500mW) → GND
+                                                              ├─ C_f1: 100µF / 25V elektrolit → GND
+                                                              ├─ R_pull_2: 22kΩ → węzeł kapsuły WM-61A
+                                                              └─ MCP1703-5002E (LDO, Vin_max=16V) → V+ = 5V
+                                                                   └─ C_f2: 100nF ceramiczny → GND
+XLR pin1 → GND
+```
+
+**Napięcie Thevenin V_th = 48V.** Przy braku obciążenia V_raw nie ma ścieżki do GND → I = 0 → V_raw = 48V. Zener BZX55C9V1 klamruje V_raw do 9V — 1V margines do WM-61A Vs_max=10V.
+
+**Prąd dostępny:** I = (48 − 9) / 6,81kΩ = **5,72 mA**.
+
+**Dlaczego R_dc = 6,81kΩ (nie cewki):** Cewka 100µH @ 20Hz ma Z = 0,013Ω — praktycznie zwiera audio do masy AC. Cewka izolująca 20Hz musiałaby mieć >1H — nierealny DIY. Rezystor R_dc = 6,81kΩ (dopasowany do R_ph) poprawia CMRR i powoduje tylko −0,33 dB straty poziomu audio.
+
+**Napięcie DC na C_hot/C_cold:** I_gałąź = I_total / 2 = 2,86 mA → V_pin = 48 − 2,86 mA × 6,81kΩ = **28,5V DC**. Po stronie urządzenia VMID ≈ 2,5V DC. Przez kondensatory C_hot/C_cold przepływa **~26V DC** — dlatego wymagane znamionowanie **≥63V** (25V lub 35V ulega uszkodzeniu przy pierwszym podłączeniu phantom).
+
+### Balanced driver
+
+MCP6004 pin 4 = VDD = V+. MCP6004 pin 11 = VSS = GND.
+U1A/U1B = stopnie ×33. U2A/U2B = balanced driver.
+
+```
+N4 → C_out(22µF NP) → SIG_OUT
+
+SIG_OUT → U2A (voltage follower):
+    U2A IN+ (pin 10) = SIG_OUT
+    U2A IN- (pin  9) = U2A OUT (pin 8)   ← sprzężenie ujemne
+    U2A OUT → R_ser_hot(100Ω) → C_hot(10µF/63V NP) → XLR pin2 + TRS tip
+
+SIG_OUT → U2B (inwerter ×-1):
+    R_U2B_in(10kΩ, 0,1%) → U2B IN- (pin 13)
+    R_U2B_fb(10kΩ, 0,1%) → U2B IN- (pin 13) ← U2B OUT (pin 14)
+    U2B IN+ (pin 12) → VMID
+    U2B OUT → R_ser_cold(100Ω) → C_cold(10µF/63V NP) → XLR pin3 + TRS ring
+
+XLR pin1 = TRS sleeve = GND
+```
+
+CMRR ≥ 60 dB: R_U2B_in = R_U2B_fb = 10kΩ **0,1%**. R_dc1 = R_dc2 = 6,81kΩ **0,1%**.
+
+**C_VMID (obowiązkowo):** VMID generowane przez dzielnik 470kΩ||470kΩ = 235kΩ. Bez C_VMID tętnienie V+ sprzęga się przez VMID do wejść odwracających wszystkich czterech wzmacniaczy. Dodać **C_VMID = 10µF NP / 25V** z VMID → GND (fc = 0,07Hz).
+
+### Weryfikacja — budżet prądowy phantom
+
+| Komponent | I_max |
+|---|---|
+| R_pull_2 (22kΩ, V_raw=9V) | 0,409 mA |
+| MCP6004 quad (170µA/amp × 4 @ 5V, max) | 0,680 mA |
+| MCP1703 (LDO quiescent) | 0,120 mA |
+| R_VMID (470kΩ×2, V+=5V) | 0,005 mA |
+| **Razem** | **1,214 mA** |
+| **I_available (zener 9V)** | **5,720 mA** |
+| **Margines worst-case** | **79 %** |
+
+### Parametry Opcji 2
+
+| Parametr | Wartość |
+|---|---|
+| Zasilanie | Phantom 48V (IEC 61938) |
+| V_raw (zener BZX55C9V1) | 9V — margines 1V do WM-61A Vs_max=10V |
+| V+ (op-ampy MCP6004) | 5V (MCP1703-5002E LDO) |
+| I_available z phantomu | 5,72 mA |
+| I_total worst-case | 1,21 mA (margines **79 %**) |
+| CMRR | ≥ 60 dB |
+| DC przez C_hot/C_cold | ~26V → min **63V rating** |
+| f_HPF wyjście | 1,6 Hz (−0,01 dB @ 20 Hz) |
+| Max długość kabla | >50 m (XLR ekranowany) |
+
 ## Powiązane projekty
 
 - [magisterka-hifigan-demo](https://github.com/PapaModule/magisterka-hifigan-demo) — strona demo cHiFi-GAN
