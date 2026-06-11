@@ -275,16 +275,16 @@ Węzły nazwane zgodnie ze schematem: `CAP` = węzeł kapsuły/R_pull, `N1`=wej�
 | 1 | TS 3.5mm IN (tip) → CAP | sygnał z głowicy kapsuły |
 | 2 | TS 3.5mm IN (sleeve) → GND | masa sygnałowa |
 | 3 | CAP → R_pull (2,2 kΩ) → V+ | zasilanie kapsuły FET (patrz specyfikacja WM-61A) |
-| 4 | CAP → RV1 terminal górny | DC-sprzężenie bezpośrednie — **bez C_in przed potencjometrem** |
-| 5 | RV1 terminal dolny → GND | dzielnik napięcia (3-terminalowy, stały ładunek 10 kΩ) |
-| 6 | RV1 suwak → C_in (+) | AC-sprzężenie PO trymerze |
-| 7 | C_in (−) → R_in (909 Ω) → N1 | wejście stopnia U1A |
-| 8 | N1 → R_fb (30,1 kΩ) → N2 | sprzężenie zwrotne stopnia 1 |
-| 9 | U1A pin3 (IN+) → VMID | bias nieodwracającego wejścia |
-| 10 | U1A pin1 (OUT) = N2 | wyjście stopnia 1 |
-| 11 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
-| 12 | C_inter (−) → R_in (909 Ω) → N3 | wejście stopnia U1B |
-| 13 | N3 → R_fb (30,1 kΩ) → N4 | sprzężenie zwrotne stopnia 2 |
+| 4 | CAP → C_in (+) | AC-sprzężenie wejście kapsuły |
+| 5 | C_in (−) → R_in1 (909Ω) → N1 | wejście U1A |
+| 6 | N1 → R_fb1 (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
+| 7 | U1A pin3 (IN+) → VMID | bias nieodwracający |
+| 8 | U1A pin1 (OUT) = N2 | wyjście stopnia 1 |
+| 9 | N2 → C_inter (+) | sprzęgacz do RV1 |
+| 10 | C_inter (−) → RV1 terminal górny | wejście trymera |
+| 11 | RV1 terminal dolny → VMID | **VMID, nie GND** |
+| 12 | RV1 suwak → R_in2 (909Ω) → N3 | wejście U1B |
+| 13 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
 | 14 | U1B pin5 (IN+) → VMID | bias nieodwracającego wejścia |
 | 15 | U1B pin7 (OUT) = N4 | wyjście stopnia 2 |
 | 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
@@ -648,16 +648,16 @@ Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/
 | 1 | TS 3.5mm IN (tip) → CAP | sygnał z głowicy |
 | 2 | TS 3.5mm IN (sleeve) → GND | masa sygnałowa |
 | 3 | CAP → R_pull_2 (22kΩ) → V_raw | zasilanie kapsuły FET |
-| 4 | CAP → RV1 terminal górny | bezpośrednie AC+DC |
-| 5 | RV1 terminal dolny → GND | dzielnik napięcia |
-| 6 | RV1 suwak → C_in (+) | AC-sprzężenie PO trymerze |
-| 7 | C_in (−) → R_in (909Ω) → N1 | wejście U1A |
-| 8 | N1 → R_fb (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
-| 9 | U1A IN+ (pin3) → VMID | bias nieodwracający |
-| 10 | U1A OUT (pin1) = N2 | wyjście stopnia 1 |
-| 11 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
-| 12 | C_inter (−) → R_in (909Ω) → N3 | wejście U1B |
-| 13 | N3 → R_fb (30,1kΩ) → N4 | sprzężenie zwrotne U1B |
+| 4 | CAP → C_in (+) | AC-sprzężenie wejście kapsuły |
+| 5 | C_in (−) → R_in1 (909Ω) → N1 | wejście U1A |
+| 6 | N1 → R_fb1 (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
+| 7 | U1A IN+ (pin3) → VMID | bias nieodwracający |
+| 8 | U1A OUT (pin1) = N2 | wyjście stopnia 1 |
+| 9 | N2 → C_inter (+) | sprzęgacz do RV1 |
+| 10 | C_inter (−) → RV1 terminal górny | wejście trymera |
+| 11 | RV1 terminal dolny → VMID | **VMID, nie GND** |
+| 12 | RV1 suwak → R_in2 (909Ω) → N3 | wejście U1B |
+| 13 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
 | 14 | U1B IN+ (pin5) → VMID | bias nieodwracający |
 | 15 | U1B OUT (pin7) = N4 | wyjście stopnia 2 |
 | 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
