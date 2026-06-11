@@ -44,9 +44,9 @@ Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne se
 [Głowica stetoskopu]                [Preamp box]                     [Interfejs USB]
   WM-61A kapsułka         TS        ┌────────────────────────────┐
   wklejona w dzwonku    3.5mm       │ Gniazdo TS 3.5mm in        │
-  ──────── kabel 1.5m ─────────────>│ RV1 (gain trim, między U1A↔U1B)│
-  Tip: sygnał + zasilanie kapsuły   │ → U1A (×33) → U1B (×33)    │── TS 6.35mm ──> wejście line
-  Sleeve: GND                       │   = 60 dB całkowite         │
+  ──────── kabel 1.5m ─────────────>│ U1A(×33)→RV1→U1B(×55)      │── TS 6.35mm ──> wejście line
+  Tip: sygnał + zasilanie kapsuły   │   = 65 dB całkowite         │
+  Sleeve: GND                       │ RV1: gain trim między stopc. │
                                     │ 2×18650 (2S) + BMS + TP5100 │
                                     │ Gniazdo USB-C (ładowanie)   │
                                     │ Gniazdo TS 6.35mm out       │
