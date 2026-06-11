@@ -5,7 +5,7 @@ Cel: nagrywanie próbek treningowych / inferencyjnych klasy normal / murmur / ex
 
 ## Warianty budowy
 
-Projekt oferuje trzy warianty budowy współdzielące tę samą kapsułkę WM-61A i rdzeń wzmacniający (60 dB, dwa stopnie ×33). Różnią się wyjściem i źródłem zasilania.
+Projekt oferuje trzy warianty budowy współdzielące tę samą kapsułkę WM-61A i rdzeń wzmacniający (65 dB, stopień 1 ×33 + stopień 2 ×55). Różnią się wyjściem i źródłem zasilania.
 
 | Parametr | Opcja 1 — TS, bateria | Opcja 2 — XLR+TRS, phantom | Opcja 3 — XLR+TRS, hybryda |
 |---|---|---|---|
@@ -44,7 +44,7 @@ Opcja 1 opisana jest w pełni poniżej. Opcje 2 i 3 dodane są jako oddzielne se
 [Głowica stetoskopu]                [Preamp box]                     [Interfejs USB]
   WM-61A kapsułka         TS        ┌────────────────────────────┐
   wklejona w dzwonku    3.5mm       │ Gniazdo TS 3.5mm in        │
-  ──────── kabel 1.5m ─────────────>│ RV1 (gain trim, na wejściu)│
+  ──────── kabel 1.5m ─────────────>│ RV1 (gain trim, między U1A↔U1B)│
   Tip: sygnał + zasilanie kapsuły   │ → U1A (×33) → U1B (×33)    │── TS 6.35mm ──> wejście line
   Sleeve: GND                       │   = 60 dB całkowite         │
                                     │ 2×18650 (2S) + BMS + TP5100 │
@@ -253,7 +253,7 @@ Zasady krytyczne dla szumów:
 - **Baterie/BMS/ładowarka fizycznie odseparowane** od veroboard z NE5532 (przegroda lub odstęp >2cm) —  
   TP5100 i przełączanie generują zakłócenia impulsowe.
 - **Gniazdo wejściowe jak najbliżej C_in/U1A** — minimalizacja długości najbardziej podatnej na szum  
-  ścieżki (przed wzmocnieniem ×1089 każdy piko-wolt zakłóceń też zostanie wzmocniony).
+  ścieżki (przed stopniem 2 (×55) każdy piko-wolt zakłóceń też zostanie wzmocniony).
 - **Jeden punkt masy (star ground)** — wszystkie GND zbiegają się przy U1, brak pętli masy.
 - **Obudowa uziemiona do GND sygnałowego w jednym punkcie** — ekranowanie EMI bez pętli masy.
 - **GAIN TRIM (RV1) na panelu przednim** — łatwy dostęp do regulacji poziomu podczas nagrywania.
@@ -432,10 +432,10 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 
 ### Wspólne (wszystkie warianty)
 - [x] Architektura modułowa (głowica TS 3.5mm + preamp box)
-- [x] Rdzeń wzmacniający 60 dB (dwa stopnie ×33, NE5532 / MCP6004)
+- [x] Rdzeń wzmacniający 65 dB (stopień 1 ×33 + stopień 2 ×55, NE5532 / MCP6004)
 - [x] Filtr HPF dobrany pod tony S3/S4 (C=22µF, −1,3 dB @ 20Hz)
-- [x] Trymer wzmocnienia RV1 na wejściu (brak ryzyka clippingu)
-- [x] Wartości R_in=909Ω, R_fb=30,1kΩ E96 1% (gain=33,11×/stopień, 60,80 dB)
+- [x] Trymer wzmocnienia RV1 między U1A a U1B (redukcja szumu ścieraka o 34,8 dB)
+- [x] Wartości R_in=909Ω, R_fb1=30,1kΩ/R_fb2=49,9kΩ E96 1% (gain ×33/×55, 65,2 dB łącznie)
 - [x] C_VMID = 10µF NP w rdzeniu wspólnym (bypass VMID, fc=0,07Hz)
 - [x] Obudowa Hammond 1590BB — jeden rozmiar dla wszystkich wariantów
 - [x] Spec wariantów (rev 6): `docs/superpowers/specs/2026-06-08-balanced-output-variants-design.md`
@@ -475,7 +475,7 @@ kapsuły WM-61A (dominujące źródło szumu układu).
   R_ph=6,81kΩ ──────────>│ R_dc1/R_dc2 (6,81kΩ 0,1%) → V_raw   │
                            │ Z1(BZX55C9V1 9V) + C_f1 + LDO 5V    │
 [Głowica]         TS      │ MCP6004 quad DIP-14:                  │
-  WM-61A     3.5mm────>   │  U1A×33 → U1B×33 (60 dB rdzeń)       │──XLR pin2/TRS tip──>
+  WM-61A     3.5mm────>   │  U1A×33 → U1B×55 (65 dB rdzeń)       │──XLR pin2/TRS tip──>
                            │  U2A (follower HOT)                   │
                            │  U2B (inwerter COLD ×-1)              │──XLR pin3/TRS ring─>
                            └──────────────────────────────────────┘
@@ -571,7 +571,8 @@ CMRR ≥ 60 dB: R_U2B_in = R_U2B_fb = 10kΩ **0,1%**. R_dc1 = R_dc2 = 6,81kΩ **
 | R_U2B_in, R_U2B_fb | Inwerter U2B (CMRR ≥60dB — parowanie 0,1%) | **10kΩ, 0,1%** | 2 |
 | R_pull_2 | Zasilanie kapsuły (V_raw=9V → Vdd_cap=3,5V) | 22kΩ, 1% | 1 |
 | R_in | Wejściowy każdego stopnia gain | 909Ω, E96, 1% | 2 |
-| R_fb | Sprzężenie zwrotne każdego stopnia (gain=33×) | 30,1kΩ, E96, 1% | 2 |
+| R_fb1 | Sprzężenie zwrotne U1A (gain=×33) | 30,1kΩ, E96, 1% | 1 |
+| R_fb2 | Sprzężenie zwrotne U1B (gain=×55) | **49,9kΩ**, E96, 1% | 1 |
 | R_ser_hot, R_ser_cold | Izolacja wyjść HOT/COLD (stabilność do kapacytancji kabla) | 100Ω, 1% | 2 |
 | R_VMID | Dzielnik wirtualnej masy | 470kΩ, 1% | 2 |
 | R_bleed | DC=0V na SIG_OUT (anty-pop) | 100kΩ, 1% | 1 |
