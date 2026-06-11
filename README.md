@@ -60,31 +60,36 @@ Preamp box zasila kapsułę przez żyłę Tip (rezystor pull-up R_pull = 2.2 kΩ
 ## Łańcuch wzmacniający — schemat elektryczny (zweryfikowany)
 
 ```
-Kapsuła → RV1(10kΩ, dzielnik napięcia, GAIN TRIM na panelu) → C_in(22µF/16V) → R_in(909Ω) → U1A (inwert. ×33, 30 dB)
-        → C_inter(22µF/16V) → R_in(909Ω) → U1B (inwert. ×33, 30 dB) → C_out(22µF/16V) → R_out(100Ω) ⊥ R_bleed(100kΩ→GND) → TS 6.35mm
+Kapsuła → C_in(22µF NP) → R_in1(909Ω) → U1A (inwert. ×33, 30,4 dB)
+        → C_inter(22µF NP) → RV1 top
+                              RV1 wiper → R_in2(909Ω) → U1B (inwert. ×55, 34,8 dB)
+                              RV1 bottom → VMID
+        → C_out(22µF NP) → R_out(100Ω) ⊥ R_bleed(100kΩ→GND) → TS 6.35mm
 ```
 
 Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dzielnik R_VMID + bypass C_VMID).
 
-> **Krytyczne dla poprawnego działania — kolejność RV1 i C_in:**  
-> C_in MUSI siedzieć PO suwaku RV1 (między suwakiem a R_in), nie przed potencjometrem. Przy odwrotnej  
-> kolejności (C_in przed RV1) powstaje ścieżka DC z węzła wirtualnej masy przez R_in i dolną część  
-> potencjometru do GND — wymagałoby to napięcia DC na wyjściu U1A rzędu kilkunastu–stu woltów (przy  
-> zasilaniu 6–8,4V!), więc op-amp wpadłby w saturację przy KAŻDYM ustawieniu trymera i układ w ogóle  
-> by nie wzmacniał sygnału. Przy poprawnej kolejności C_in blokuje DC, jedyną drogą do węzła wirtualnej  
-> masy pozostaje R_fb — op-amp ustala punkt pracy dokładnie na VMID. Zweryfikowano, że ta zmiana nie  
-> wymaga modyfikacji BOM (te same 3× 22µF) i nie pogarsza żadnego wcześniej zweryfikowanego parametru  
-> (HPF w najgorszym przypadku nadal daje f_c≈7,96Hz/stopień → −1,3dB @ 20Hz; obciążenie kapsuły  
-> R_pull‖RV1=1803Ω; wzmocnienie i headroom bez zmian).
+> **Krytyczne dla poprawnego działania — RV1 bottom musi iść do VMID, nie GND:**
+> W zasilaniu jednonapięciowym (single-supply) cały tor sygnałowy odnosi się do VMID = V+/2.
+> Przy bottom→GND: DC na wiperze = 0V, a U1B IN- (virtual ground) = VMID → stały prąd
+> VMID/R_in2 ≈ 2,75 mA (przy V+=5V) przez R_in2, U1B nasycony przy każdym ustawieniu suwaka.
+> Przy bottom→VMID: cały pot siedzi na DC=VMID, brak prądu DC przez R_in2, układ działa poprawnie.
+> VMID jest AC-ground przez C_VMID (fc=0,07Hz), więc AC zachowanie identyczne jak GND.
+>
+> Dlaczego RV1 między stopniami (nie na wejściu jak wcześniej):
+> Na wejściu szum ścieraka był amplifikowany przez pełne ×1817 (65 dB). Między stopniami —
+> tylko przez ×33 (30 dB). Użytkownik reguluje suwak podczas nagrania, więc szum mechaniczny
+> musi być minimalizowany. Obciążenie kapsuły: stałe 651 Ω (vs zmienne 605–1800 Ω w starym projekcie
+> — przy max gain stary projekt pracował już przy 605 Ω, nowe 651 Ω nie jest regresem).
 
 ### Wyniki weryfikacji elektrycznej
 
 | Kontrola | Wynik |
 |---|---|
-| Wzmocnienie całkowite | ×1089 = **60.7 dB** ✓ (zgodne z wymaganiem wynikającym z analizy SPL→V) |
+| Wzmocnienie całkowite | ×1817 = **65,2 dB** ✓ (stopień 1: ×33/30,4dB + stopień 2: ×55/34,8dB; +5dB dla słabych S3/S4 i szmerów gr.I-II w zaszumionym datasecie) |
 | Filtr górnoprzepustowy (HPF) | C = 22 µF → tłumienie na 20 Hz tylko **−1.3 dB** (S3/S4 zachowane; przy 10 µF byłoby −4.9 dB — niedopuszczalne) |
-| Ryzyko clippingu | RV1 na **wejściu** (przed wzmocnieniem) — sygnał nigdy nie przekracza marginesu swing wewnątrz U1A/U1B, niezależnie od stanu baterii i poziomu SPL |
-| Poziomy wyjściowe | 173 mV @ 60 dB SPL · 307 mV @ 65 dB SPL · 971 mV @ 75 dB SPL — sensowne poziomy liniowe |
+| Ryzyko clippingu | RV1 **między U1A a U1B** — U1A nigdy nie klipuje (µV na wejściu), U1B klipuje tylko przy >78 dB SPL z suwnikiem na max (trim redukuje gdy potrzeba) |
+| Poziomy wyjściowe | 29 mV @ 40 dB SPL · 91 mV @ 50 dB SPL · 289 mV @ 60 dB SPL · 1,62 V @ 75 dB SPL — zakres dla zaszumionych nagrań cHiFi-GAN |
 | Zapas napięciowy NE5532 | 3.5–6.3× margines względem sygnału w całym zakresie napięcia baterii (8.4V → 6.0V odcięcie BMS) |
 | Pasmo / stabilność | 303 kHz/stopień — 60× zapas nad wymaganym 5 kHz |
 
