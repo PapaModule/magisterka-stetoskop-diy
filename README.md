@@ -264,22 +264,20 @@ Węzły nazwane zgodnie ze schematem: `CAP` = węzeł kapsuły/R_pull, `N1`=wej�
 | 6 | N1 → R_fb1 (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
 | 7 | U1A pin3 (IN+) → VMID | bias nieodwracający |
 | 8 | U1A pin1 (OUT) = N2 | wyjście stopnia 1 |
-| 9 | N2 → C_inter (+) | sprzęgacz do RV1 |
-| 10 | C_inter (−) → RV1 terminal górny | wejście trymera |
-| 11 | RV1 terminal dolny → VMID | **VMID, nie GND** |
-| 12 | RV1 suwak → R_in2 (909Ω) → N3 | wejście U1B |
-| 13 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
-| 14 | U1B pin5 (IN+) → VMID | bias nieodwracającego wejścia |
-| 15 | U1B pin7 (OUT) = N4 | wyjście stopnia 2 |
-| 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
-| 17 | C_out (−) → OUT | węzeł wyjściowy |
-| 18 | OUT → R_bleed (100 kΩ) → GND | definiuje DC=0V na wyjściu (anty-pop) |
-| 19 | OUT → R_out (100 Ω) → TS 6.35mm (tip) | izolacja wyjścia od pojemności kabla |
-| 20 | TS 6.35mm (sleeve) → GND | masa sygnałowa wyjścia |
-| 21 | VMID = R_VMID/R_VMID dzielnik z V+ → C_VMID → GND | generacja wirtualnej masy |
-| 22 | U1 pin8 (V+) → szyna zasilania, C_decouple (100 nF) → GND blisko pinu | odsprzęganie zasilania |
-| 23 | U1 pin4 (V−/GND) → **punkt star-ground** | wszystkie GND zbiegają tutaj |
-| 24 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI bez pętli masy |
+| 9 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
+| 10 | C_inter (−) → R_in2 (909Ω) → N3 | wejście U1B |
+| 11 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
+| 12 | U1B pin5 (IN+) → VMID | bias nieodwracającego wejścia |
+| 13 | U1B pin7 (OUT) = N4 | wyjście stopnia 2 |
+| 14 | N4 → C_out (+) | sprzęgacz wyjściowy |
+| 15 | C_out (−) → OUT | węzeł wyjściowy |
+| 16 | OUT → R_bleed (100 kΩ) → GND | definiuje DC=0V na wyjściu (anty-pop) |
+| 17 | OUT → R_out (100 Ω) → TS 6.35mm (tip) | izolacja wyjścia od pojemności kabla |
+| 18 | TS 6.35mm (sleeve) → GND | masa sygnałowa wyjścia |
+| 19 | VMID = R_VMID/R_VMID dzielnik z V+ → C_VMID → GND | generacja wirtualnej masy |
+| 20 | U1 pin8 (V+) → szyna zasilania, C_decouple (100 nF) → GND blisko pinu | odsprzęganie zasilania |
+| 21 | U1 pin4 (V−/GND) → **punkt star-ground** | wszystkie GND zbiegają tutaj |
+| 22 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI bez pętli masy |
 
 ### Montaż NE5532 (DIP-8) na paskach równoległych
 
@@ -410,7 +408,7 @@ R_in = 909 Ω z C_in/C_inter = 22µF → HPF f_c = 7,96 Hz/stopień, łączny �
 ### Opcja 1 — TS 6.35mm, bateria 2×18650
 - [x] Schemat elektryczny (NE5532N DIP-8, zweryfikowany)
 - [x] BOM z kosztorysem (~159–259 zł)
-- [x] Layout veroboard (netlist 24 połączeń, 4 przecięcia DIP-8, kolejność montażu)
+- [x] Layout veroboard (netlist 22 połączenia, 4 przecięcia DIP-8, kolejność montażu)
 - [ ] Zakup komponentów (weryfikacja cen TME/Botland)
 - [ ] Budowa i test: SNR vs dataset mediana (normal = −2,7 dB)
 
@@ -419,7 +417,7 @@ R_in = 909 Ω z C_in/C_inter = 22µF → HPF f_c = 7,96 Hz/stopień, łączny �
 - [x] Spec balanced driver (U2A follower + U2B inwerter ×-1, CMRR ≥60dB)
 - [x] Weryfikacja budżetu prądowego (1,21mA / 5,72mA worst-case)
 - [x] BOM (MCP6004-I/P, MCP1703, BZX55C9V1, C_hot/cold 63V, R 0,1%)
-- [x] Layout veroboard (netlist 40 połączeń, 7 przecięć DIP-14, kolejność montażu)
+- [x] Layout veroboard (netlist 38 połączeń, 7 przecięć DIP-14, kolejność montażu)
 - [ ] Zakup komponentów
 - [ ] Budowa i test (V_raw≈9V, V+≈5V, VMID≈2,5V przy uruchomieniu; pomiar CMRR)
 
@@ -606,7 +604,7 @@ DIP-14: pin1 pin2 pin3 pin4 pin5 pin6 pin7          pin8 pin9 p10 p11 p12 p13 p1
 > ciągłości KAŻDĄ z par: **1–14, 2–13, 3–12, 4–11, 5–10, 6–9, 7–8** — każda musi być **rozwarta**
 > przed włożeniem układu w podstawkę.
 
-#### Netlist Opcji 2 — 40 połączeń
+#### Netlist Opcji 2 — 38 połączeń
 
 Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/2, `V_raw`=9V po zenerze, `V+`=5V z LDO, `HOT`/`COLD`=XLR+TRS wyjście.
 
@@ -620,38 +618,36 @@ Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/
 | 6 | N1 → R_fb1 (30,1kΩ) → N2 | sprzężenie zwrotne U1A |
 | 7 | U1A IN+ (pin3) → VMID | bias nieodwracający |
 | 8 | U1A OUT (pin1) = N2 | wyjście stopnia 1 |
-| 9 | N2 → C_inter (+) | sprzęgacz do RV1 |
-| 10 | C_inter (−) → RV1 terminal górny | wejście trymera |
-| 11 | RV1 terminal dolny → VMID | **VMID, nie GND** |
-| 12 | RV1 suwak → R_in2 (909Ω) → N3 | wejście U1B |
-| 13 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
-| 14 | U1B IN+ (pin5) → VMID | bias nieodwracający |
-| 15 | U1B OUT (pin7) = N4 | wyjście stopnia 2 |
-| 16 | N4 → C_out (+) | sprzęgacz wyjściowy |
-| 17 | C_out (−) = SIG_OUT | wyjście rdzenia |
-| 18 | SIG_OUT → R_bleed (100kΩ) → GND | anty-pop |
-| 19 | SIG_OUT → U2A IN+ (pin10) | wejście voltage follower HOT |
-| 20 | U2A IN- (pin9) = U2A OUT (pin8) | sprzężenie ujemne follower |
-| 21 | U2A OUT (pin8) → R_ser_hot (100Ω) → C_hot (+) | HOT przed DC-blokiem |
-| 22 | C_hot (−) → XLR pin2 + TRS tip | wyjście HOT |
-| 23 | SIG_OUT → R_U2B_in (10kΩ, 0,1%) → U2B IN- (pin13) | wejście inwertera COLD |
-| 24 | U2B OUT (pin14) → R_U2B_fb (10kΩ, 0,1%) → U2B IN- (pin13) | sprzężenie inwertera |
-| 25 | U2B IN+ (pin12) → VMID | ref inwertera ×-1 |
-| 26 | U2B OUT (pin14) → R_ser_cold (100Ω) → C_cold (+) | COLD przed DC-blokiem |
-| 27 | C_cold (−) → XLR pin3 + TRS ring | wyjście COLD |
-| 28 | XLR pin1 = TRS sleeve = GND | masa sygnałowa wyjścia |
-| 29 | XLR pin2 → R_dc1 (6,81kΩ, 0,1%) → V_raw | phantom DC tap HOT |
-| 30 | XLR pin3 → R_dc2 (6,81kΩ, 0,1%) → V_raw | phantom DC tap COLD |
-| 31 | V_raw → Z1 (BZX55C9V1, 9V, 500mW) → GND | ochrona Vs_max WM-61A |
-| 32 | V_raw → C_f1 (100µF/25V) → GND | bulk filter |
-| 33 | V_raw → MCP1703 Vin | wejście LDO |
-| 34 | MCP1703 Vout = V+ | 5V dla MCP6004 i VMID |
-| 35 | V+ → C_f2 (100nF) → GND | decouple LDO |
-| 36 | VMID = dzielnik R_VMID(470kΩ) + R_VMID(470kΩ) z V+ → GND | wirtualna masa |
-| 37 | VMID → C_VMID (10µF NP / 25V) → GND | bypass VMID, fc=0,07Hz |
-| 38 | U1 pin4 (VDD) → V+; C_decouple (100nF) → GND blisko pinu | odsprzęganie zasilania |
-| 39 | U1 pin11 (VSS) → GND — **punkt star-ground** | wszystkie GND zbiegają tu |
-| 40 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI |
+| 9 | N2 → C_inter (+) | sprzęgacz międzystopniowy |
+| 10 | C_inter (−) → R_in2 (909Ω) → N3 | wejście U1B |
+| 11 | N3 → R_fb2 (49,9kΩ) → N4 | sprzężenie zwrotne U1B (gain ×55) |
+| 12 | U1B IN+ (pin5) → VMID | bias nieodwracający |
+| 13 | U1B OUT (pin7) = N4 | wyjście stopnia 2 |
+| 14 | N4 → C_out (+) | sprzęgacz wyjściowy |
+| 15 | C_out (−) = SIG_OUT | wyjście rdzenia |
+| 16 | SIG_OUT → R_bleed (100kΩ) → GND | anty-pop |
+| 17 | SIG_OUT → U2A IN+ (pin10) | wejście voltage follower HOT |
+| 18 | U2A IN- (pin9) = U2A OUT (pin8) | sprzężenie ujemne follower |
+| 19 | U2A OUT (pin8) → R_ser_hot (100Ω) → C_hot (+) | HOT przed DC-blokiem |
+| 20 | C_hot (−) → XLR pin2 + TRS tip | wyjście HOT |
+| 21 | SIG_OUT → R_U2B_in (10kΩ, 0,1%) → U2B IN- (pin13) | wejście inwertera COLD |
+| 22 | U2B OUT (pin14) → R_U2B_fb (10kΩ, 0,1%) → U2B IN- (pin13) | sprzężenie inwertera |
+| 23 | U2B IN+ (pin12) → VMID | ref inwertera ×-1 |
+| 24 | U2B OUT (pin14) → R_ser_cold (100Ω) → C_cold (+) | COLD przed DC-blokiem |
+| 25 | C_cold (−) → XLR pin3 + TRS ring | wyjście COLD |
+| 26 | XLR pin1 = TRS sleeve = GND | masa sygnałowa wyjścia |
+| 27 | XLR pin2 → R_dc1 (6,81kΩ, 0,1%) → V_raw | phantom DC tap HOT |
+| 28 | XLR pin3 → R_dc2 (6,81kΩ, 0,1%) → V_raw | phantom DC tap COLD |
+| 29 | V_raw → Z1 (BZX55C9V1, 9V, 500mW) → GND | ochrona Vs_max WM-61A |
+| 30 | V_raw → C_f1 (100µF/25V) → GND | bulk filter |
+| 31 | V_raw → MCP1703 Vin | wejście LDO |
+| 32 | MCP1703 Vout = V+ | 5V dla MCP6004 i VMID |
+| 33 | V+ → C_f2 (100nF) → GND | decouple LDO |
+| 34 | VMID = dzielnik R_VMID(470kΩ) + R_VMID(470kΩ) z V+ → GND | wirtualna masa |
+| 35 | VMID → C_VMID (10µF NP / 25V) → GND | bypass VMID, fc=0,07Hz |
+| 36 | U1 pin4 (VDD) → V+; C_decouple (100nF) → GND blisko pinu | odsprzęganie zasilania |
+| 37 | U1 pin11 (VSS) → GND — **punkt star-ground** | wszystkie GND zbiegają tu |
+| 38 | Obudowa → star-ground (jeden punkt) | ekranowanie EMI |
 
 #### Kolejność montażu — Opcja 2
 
