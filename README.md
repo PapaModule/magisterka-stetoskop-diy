@@ -83,11 +83,10 @@ Zasilanie jednonapięciowe (single-supply) z wirtualną masą VMID = V+/2 (dziel
 
 **Dwie dodatkowe poprawki znalezione przy analizie polaryzacji DC kondensatorów sprzęgających:**
 1. **C_in, C_inter, C_out → kondensatory dwubiegunowe (NP/bipolar), nie standardowe elektrolityczne.**  
-   Napięcie DC po obu stronach C_in zależy od pozycji trymera RV1 (suwak może być DC powyżej lub  
-   poniżej VMID) — znak napięcia na C_in mógłby się odwrócić w zależności od ustawienia. Standardowy  
-   (polaryzowany) elektrolit groziłby pracą z odwrotną polaryzacją (zwiększony upływ, degradacja).  
-   Rozwiązanie: kondensatory NP eliminują ten problem i jednocześnie usuwają ryzyko pomyłki przy  
-   montażu (3 identyczne wartości 22µF w torze — łatwo pomylić orientację).
+   C_inter siedzi między dwoma stopniami obydwoma na DC=VMID — różnica DC ≈ 0V, polaryzowany  
+   elektrolit degradowałby się przy zerowej polaryzacji. C_in i C_out mają zdefiniowaną polaryzację,  
+   ale NP upraszcza montaż: 3 identyczne kondensatory 22µF w torze sygnałowym, brak ryzyka pomyłki  
+   orientacji przy składaniu.
 2. **Dodano R_bleed = 100 kΩ z węzła wyjściowego (za C_out) do GND.**  
    Bez niego DC po "zimnej" stronie C_out nie miałby zdefiniowanej ścieżki do masy — ryzyko trzasku  
    ("pop") przy podłączaniu/odłączaniu kabla do interfejsu. R_bleed definiuje DC=0V, pobiera prąd ≈0  
@@ -311,8 +310,8 @@ Krytyczny punkt: nóżki 1↔8, 2↔7, 3↔6, 4↔5 leżą na tych samych paskac
   │             │    stopni 1 i 2)      │             │
   │ • TS IN     │                       │ • R_out     │
   │ • R_pull    │   ┌───────────────┐   │ • R_bleed   │
-  │ • RV1       │   │  U1 (DIP-8)   │   │ • C_out     │
-  │ • C_in      │   │  + R_in/R_fb  │   │ • TS OUT    │
+  │ • C_in      │   │  U1 (DIP-8)   │   │ • C_out     │
+  │ • R_in      │   │  + R_in/R_fb  │   │ • TS OUT    │
   │ • R_in      │   │  + C_inter    │   │             │
   │             │   │  ★ star-GND   │   │             │
   │             │   │   (pin 4)     │   │             │
@@ -329,19 +328,18 @@ Krytyczny punkt: nóżki 1↔8, 2↔7, 3↔6, 4↔5 leżą na tych samych paskac
 1. **Wykonać 4 przecięcia w obszarze IC** (kolumny A-D, między rzędami pinów) i
    **zweryfikować miernikiem ciągłości** — każda para 1-8/2-7/3-6/4-5 musi być rozwarta.
 2. Zamontować podstawkę DIP-8 (bez układu scalonego).
-3. Wlutować rezystory (R_pull, RV1 — przewody na panel, R_in×2, R_fb×2, R_out, R_bleed, R_VMID×2).
+3. Wlutować rezystory (R_pull, R_in×2, R_fb1, R_fb2, R_out, R_bleed, R_VMID×2).
 4. Wlutować kondensatory ceramiczne (C_decouple, C_VMID).
 5. Wlutować kondensatory elektrolityczne **NP/bipolarne** (C_in, C_inter, C_out) — zwrócić uwagę,
    że wszystkie trzy są wizualnie identyczne (22 µF/16 V) — łatwo o pomyłkę w kolejności montażu,
    nie w polaryzacji (NP nie ma polaryzacji, ale można pomylić miejsce w sygnale).
-6. Połączenia poza płytką: RV1, gniazda TS 3.5/6.35, przełącznik, BMS/bateria, LED.
+6. Połączenia poza płytką: gniazda TS 3.5/6.35, przełącznik, BMS/bateria, LED.
 7. **Przetestować ciągłość całego netlistu miernikiem PRZED włożeniem układu scalonego**
    — szczególnie pary 1-8/2-7/3-6/4-5 (rozwarcie) i każde połączenie z tabeli netlistu (ciągłość).
 8. Pierwsze włączenie: **zmierzyć napięcie DC na pinach 1 i 7** (wyjścia U1A/U1B) —
    oczekiwana wartość ≈ V_MID (np. ~4,2 V przy pełnej baterii 2×18650).
    > Jeśli zamiast tego napięcie jest bliskie szynie zasilania (V+ lub GND) — **STOP**.
-   > To dokładnie objaw błędu kolejności C_in/RV1 (patrz sekcja "Łańcuch wzmacniający" wyżej,
-   > opisany i naprawiony błąd #3) — oznacza błąd montażu, sprawdzić węzły 4-7 z netlistu.
+   > Oznacza błąd montażu — sprawdzić połączenia węzłów z netlistu, szczególnie VMID.
 
 ## Bill of Materials (BOM)
 
@@ -656,7 +654,7 @@ Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/
 5. Wlutować rezystory 0,1% jako pierwsze (R_dc1/R_dc2, R_U2B_in/fb), następnie resztę rezystorów.
 6. Wlutować kondensatory ceramiczne (C_f2, C_decouple).
 7. Wlutować kondensatory elektrolityczne: C_f1 (100µF/25V, spolaryzowany), C_VMID (10µF NP), C_in/C_inter/C_out (22µF NP), C_hot/C_cold (10µF/**63V** NP — **uwaga na napięcie!**).
-8. Połączenia zewnętrzne: RV1, J_IN, J_XLR (Neutrik NC3FBH), J_TRS.
+8. Połączenia zewnętrzne: J_IN, J_XLR (Neutrik NC3FBH), J_TRS.
 9. **Ciągłość całego netlistu miernikiem PRZED włożeniem MCP6004 w podstawkę.**
 10. Pierwsze włączenie (XLR do interfejsu z phantom 48V): zmierzyć V_raw ≈ 9V, V+ ≈ 5V, VMID ≈ 2,5V. Jeśli V_raw > 10V — **STOP**, sprawdzić Z1.
 
