@@ -424,16 +424,38 @@ kapsuły WM-61A (dominujące źródło szumu układu).
 
 ## Status projektu
 
-- [x] Architektura ogólna (głowica TS + preamp box + zasilanie Li-ion)
-- [x] Schemat elektryczny łańcucha wzmacniającego (60dB, 1× NE5532 dual op-amp, zweryfikowany)
-- [x] Filtr górnoprzepustowy dobrany pod tony S3/S4 (C=22µF)
-- [x] Analiza ryzyka clippingu i umiejscowienie trymera (RV1 na wejściu)
-- [x] BOM z kategoriami komponentów i orientacyjnym kosztorysem
-- [x] Plan montażu głowicy i preamp boxa
-- [x] Dokładne wartości R_fb/R_in dobrane (R_in=909Ω, R_fb=30,1kΩ, E96 1% — gain=33,11×/stopień, 60,80dB całkowite)
-- [x] Finalny layout veroboard (netlist 24 połączeń, plan przecięć IC, strefy rozmieszczenia, kolejność montażu)
-- [ ] Zakup komponentów, weryfikacja symboli TME/Botland przed zamówieniem
-- [ ] Budowa i testy SNR po złożeniu — porównanie z danymi datasetu (mediana SNR normal = −2.7 dB)
+### Wspólne (wszystkie warianty)
+- [x] Architektura modułowa (głowica TS 3.5mm + preamp box)
+- [x] Rdzeń wzmacniający 60 dB (dwa stopnie ×33, NE5532 / MCP6004)
+- [x] Filtr HPF dobrany pod tony S3/S4 (C=22µF, −1,3 dB @ 20Hz)
+- [x] Trymer wzmocnienia RV1 na wejściu (brak ryzyka clippingu)
+- [x] Wartości R_in=909Ω, R_fb=30,1kΩ E96 1% (gain=33,11×/stopień, 60,80 dB)
+- [x] C_VMID = 10µF NP w rdzeniu wspólnym (bypass VMID, fc=0,07Hz)
+- [x] Obudowa Hammond 1590BB — jeden rozmiar dla wszystkich wariantów
+- [x] Spec wariantów (rev 6): `docs/superpowers/specs/2026-06-08-balanced-output-variants-design.md`
+
+### Opcja 1 — TS 6.35mm, bateria 2×18650
+- [x] Schemat elektryczny (NE5532N DIP-8, zweryfikowany)
+- [x] BOM z kosztorysem (~159–259 zł)
+- [x] Layout veroboard (netlist 24 połączeń, 4 przecięcia DIP-8, kolejność montażu)
+- [ ] Zakup komponentów (weryfikacja cen TME/Botland)
+- [ ] Budowa i test: SNR vs dataset mediana (normal = −2,7 dB)
+
+### Opcja 2 — XLR+TRS, phantom 48V
+- [x] Spec phantom receiver (V_th=48V, zener 9V, I_avail=5,72mA, margines 79%)
+- [x] Spec balanced driver (U2A follower + U2B inwerter ×-1, CMRR ≥60dB)
+- [x] Weryfikacja budżetu prądowego (1,21mA / 5,72mA worst-case)
+- [x] BOM (MCP6004-I/P, MCP1703, BZX55C9V1, C_hot/cold 63V, R 0,1%)
+- [x] Layout veroboard (netlist 40 połączeń, 7 przecięć DIP-14, kolejność montażu)
+- [ ] Zakup komponentów
+- [ ] Budowa i test (V_raw≈9V, V+≈5V, VMID≈2,5V przy uruchomieniu; pomiar CMRR)
+
+### Opcja 3 — XLR+TRS, hybryda phantom+bateria
+- [x] Spec zasilania hybrydowego (diode-OR BAT85, V_bus 8,7V/8,1V/5,7V)
+- [x] Weryfikacja marginesu diode-OR (0,6V; BAT85 I_r <1µA w temp. roboczej)
+- [x] BOM delta (D1/D2 BAT85, C_bus, 2×18650, BMS 2S, TP5100)
+- [ ] Zakup komponentów
+- [ ] Budowa i test (auto-przełączanie phantom→bateria przy odłączeniu XLR)
 
 ---
 
