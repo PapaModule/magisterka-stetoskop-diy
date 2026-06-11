@@ -636,6 +636,76 @@ Węzły: `CAP`=kapsuła, `N1`–`N4`=wewnętrzne, `SIG_OUT`=za C_out, `VMID`=V+/
 9. **Ciągłość całego netlistu miernikiem PRZED włożeniem MCP6004 w podstawkę.**
 10. Pierwsze włączenie (XLR do interfejsu z phantom 48V): zmierzyć V_raw ≈ 9V, V+ ≈ 5V, VMID ≈ 2,5V. Jeśli V_raw > 10V — **STOP**, sprawdzić Z1.
 
+---
+
+## Opcja 3 — XLR+TRS zbalansowane, zasilanie hybrydowe (phantom + bateria 2×18650)
+
+Opcja 3 jest identyczna z Opcją 2 **z wyjątkiem sekcji zasilania**: diode-OR łączy V_raw phantom z V_bat (bateria 2×18650) przed zenerem i LDO. Układ wzmacniający, balanced driver, gniazda XLR+TRS, BOM elektroniki — wszystko bez zmian.
+
+### Schemat zasilania hybrydowego (delta względem Opcji 2)
+
+```
+Phantom: R_dc1/R_dc2 → V_raw_ph → D1 (BAT85, Vf=0,3V) ─┐
+Bateria: 2×18650 + BMS 2S → V_bat  → D2 (BAT85, Vf=0,3V) ─┴─→ V_bus
+                                                              ├─ Z1: BZX55C9V1 (9V) → GND
+                                                              ├─ C_bus: 100µF / 25V → GND
+                                                              ├─ R_pull_2 (22kΩ) → kapsuła
+                                                              └─ MCP1703-5002E → V+ = 5V
+TP5100 + USB-C → ładowanie baterii (niezależnie od phantom)
+```
+
+### Weryfikacja V_bus — priorytety
+
+| Źródło | V_bus po diodzie Schottky | LDO Vin | Margines do Vin_max=16V |
+|---|---|---|---|
+| Phantom (zener klamped) | 9 − 0,3 = **8,7V** | ✓ | 7,3V |
+| Bateria pełna (8,4V) | 8,4 − 0,3 = **8,1V** | ✓ | 7,9V |
+| Bateria minimalna (6,0V) | 6,0 − 0,3 = **5,7V** | dropout ≈5mV → Vout≈5V ✓ | 695mV |
+
+**Priorytet automatyczny:** V_bus_phantom = 8,7V > V_bus_bat_max = 8,1V → D1 prowadzi, D2 zablokowana. Przełączenie phantom→bateria przy odłączeniu XLR: bufor C_bus (100µF) eliminuje glitch audio.
+
+> **Margines diode-OR:** różnica V_bus wynosi **0,6V**. Prąd wsteczny BAT85 w zakresie temperatur roboczych (−20…+60°C) wynosi <1µA — pomijalny wobec I_total=1,21mA. Wariant konserwatywny: D2 = 1N4148 (Vf≈0,6V) → V_bus_bat=7,8V, margines 0,9V.
+
+### Ładowanie baterii przez phantom
+
+Phantom 48V **nie ładuje** baterii bezpośrednio — linia phantom jest odizolowana zenarem i D1. TP5100 (zasilany USB-C 5V) ładuje baterie niezależnie od stanu phantom. Podłączenie phantom nie wpływa na cykl ładowania.
+
+### BOM — komponenty dodatkowe Opcji 3 (delta od Opcji 2)
+
+| Ref | Opis | Wartość |
+|---|---|---|
+| D1 | Dioda priorytetowa phantom | BAT85 Schottky |
+| D2 | Dioda priorytetowa bateria | BAT85 Schottky (lub 1N4148 — konserwatywnie) |
+| C_bus | Bufor szyny V_bus (zastępuje C_f1 z Opcji 2) | 100µF / 25V elektrolit |
+| BT1 | Ogniwa Li-ion | 2× 18650 markowe (Samsung/Molicel — **nie no-name**) |
+| U_BMS | BMS 2S 8.4V | np. HX-2S-A10 (ochrona nad/pod-napięciowa) |
+| U_CHG | Ładowarka Li-ion 2S | TP5100 |
+| J_USB | Gniazdo ładowania | USB-C + ew. PD trigger CH224K |
+| SW1 | Przełącznik ON/OFF | dźwigniowy, panel mount |
+
+> Wszystkie pozostałe komponenty — identyczne z Opcją 2.
+
+### Różnice montażowe Opcji 3 vs Opcji 2
+
+- D1/D2 (BAT85): katoda do V_bus, anoda do V_raw_ph/V_bat.
+- C_bus zajmuje pozycję C_f1 z Opcji 2 (ta sama topologiczna pozycja bufor/filtr).
+- Koszyczek 2×18650 + BMS po stronie opozytnej do veroboard (unikaj bliskości TP5100 i MCP6004).
+- BMS GND = GND układu (wspólna masa), BMS V+ = V_bat do D2 anody.
+- TP5100 i USB-C na panelu tylnym.
+
+### Parametry Opcji 3
+
+| Parametr | Wartość |
+|---|---|
+| Zasilanie | Phantom 48V (priorytet) lub 2×18650 (auto-fallback) |
+| V_bus | 8,7V (phantom) / 8,1–5,7V (bateria) |
+| V+ (op-ampy) | 5V (MCP1703-5002E LDO) |
+| Margines prądowy | 79% (identyczny z Opcją 2) |
+| CMRR | ≥ 60 dB |
+| DC przez C_hot/C_cold | ~26V → min 63V rating |
+| Autonomia bez phantom | ~300h (2×18650, zależnie od ogniw) |
+| USB-C ładowanie | ✓ (TP5100, niezależnie od phantom) |
+
 ## Powiązane projekty
 
 - [magisterka-hifigan-demo](https://github.com/PapaModule/magisterka-hifigan-demo) — strona demo cHiFi-GAN
