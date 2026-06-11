@@ -7,7 +7,7 @@ metadata:
 
 # Spec: Warianty wyjścia stetoskopu — TS / TRS+XLR phantom / TRS+XLR hybryda
 
-**Data:** 2026-06-08 (rev 6: 2026-06-11)**  
+**Data:** 2026-06-08 (rev 7: 2026-06-11)**  
 **Projekt:** `PapaModule/magisterka-stetoskop-diy`  
 **Status:** zweryfikowany, zatwierdzony do implementacji
 
@@ -23,16 +23,18 @@ metadata:
 | 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=28,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
 | 5 | Korekta stałej V_bus_phantom 14,7V→8,7V w opisie Opt3 (stała z ery zenera 15V); Icc MCP6004 600→680µA (datasheet max @5V: 170µA/wzmacniacz×4); adnotacja o marginesie diode-OR 0,6V |
 | 6 | Dodanie C_VMID = 10µF NP do rdzenia wspólnego (odsprzęganie szyny VMID) |
+| 7 | RV1 przeniesiony między U1A a U1B (klasyczna topologia niskoszumowa); R_fb2 30,1kΩ→49,9kΩ; wzmocnienie 60→65 dB; nowe ostrzeżenie RV1 bottom→VMID |
 
 ---
 
 ## Wspólny rdzeń (niezmieniony we wszystkich wariantach)
 
 ```
-WM-61A → R_pull(→V+) → RV1(10kΩ, dzielnik, trim na panelu)
-       → C_in(22µF NP) → R_in(909Ω) → U1A(inwert.×33, 30dB)
-       → C_inter(22µF NP) → R_in(909Ω) → U1B(inwert.×33, 30dB)
-       → węzeł N4 (wyjście rdzenia, 60dB całkowite)
+WM-61A → R_pull(→V+) → C_in(22µF NP) → R_in1(909Ω) → U1A(inwert.×33, 30dB)
+       → C_inter(22µF NP) → RV1 top
+                             RV1 wiper → R_in2(909Ω) → U1B(inwert.×55, 34,8dB)
+                             RV1 bottom → VMID
+       → węzeł N4 (wyjście rdzenia, 65dB całkowite)
 
 Zasilanie: single-supply, VMID = V+/2
 Wejście kapsuły: TS 3.5mm (tip=sygnał+zasilanie, sleeve=GND)
@@ -41,10 +43,69 @@ Wejście kapsuły: TS 3.5mm (tip=sygnał+zasilanie, sleeve=GND)
 Opcja 1: NE5532 (DIP-8), R_pull=2,2kΩ→V+.  
 Opcje 2 i 3: MCP6004 (DIP-14, quad), R_pull_2=22kΩ→V_raw.
 
-**C_VMID — obowiązkowo we wszystkich wariantach:**  
+### Wzmocnienie i dobór R_fb
+
+| Stopień | R_in | R_fb | Wzmocnienie |
+|---|---|---|---|
+| U1A (stopień 1) | 909 Ω | 30,1 kΩ, E96, 1% | ×33,1 = 30,4 dB |
+| U1B (stopień 2) | 909 Ω | **49,9 kΩ, E96, 1%** | ×54,9 = 34,8 dB |
+| **Łącznie** | | | **×1817 = 65,2 dB** |
+
+Uzasadnienie 65 dB (nie 60 dB): dataset cHiFi-GAN zawiera zaszumione nagrania z tonami S3/S4
+i szmerami klas I-II (SPL ~40–55 dB). Przy 60 dB wyjście wynosiło 17–55 mV → SNR ≈14 dB
+dla najsłabszych dźwięków. Przy 65 dB: 54–173 mV → SNR ≈20 dB. Granica 70 dB wykluczona
+(clips przy typowym S1/S2 75+ dB SPL z suwnikiem na górze).
+
+| SPL | V_out (suwak max, pot góra) | Ocena |
+|---|---|---|
+| 40 dB | ~29 mV | użyteczny (S3/S4 słabe) |
+| 50 dB | ~91 mV | dobry |
+| 60 dB | ~289 mV | bardzo dobry |
+| 75 dB | ~1,62 V | linia nominalna |
+| 80 dB | ~2,89 V peak | limit swing przy V+=8,4V; trim redukuje przy głośnych |
+
+### Pozycja RV1 — między U1A a U1B
+
+RV1 między stopniami to klasyczna topologia niskoszumowa. Trzy opcje porównane:
+
+| Pozycja RV1 | Ryzyko clippingu | Szum ścieraka amplifikowany przez | Obciążenie kapsuły |
+|---|---|---|---|
+| Przed U1A (stary projekt) | brak | **×1817 (65 dB)** | 605–1800 Ω (zależne od suwaka) |
+| **Między U1A a U1B (rev7)** | brak | **×33 (30 dB)** | 651 Ω stałe |
+| Za U1B | clipping przy 80 dB SPL | ×1 | 651 Ω stałe |
+
+Obciążenie kapsuły: stare 605–1800 Ω (zależne od suwaka — przy max gain było 605 Ω).
+Nowe stałe 651 Ω — nie jest regresem, bo w typowym ustawieniu max-gain stary projekt
+i tak pracował przy 605 Ω. Nowy projekt stabilizuje obciążenie niezależnie od suwaka.
+
+Użytkownik reguluje suwak podczas nagrania (między pacjentami), więc szum mechaniczny
+ścieraka musi być minimalizowany. Amplifikacja ×33 zamiast ×1817 = **34,8 dB redukcji
+szumu ścieraka**.
+
+> **KRYTYCZNE: RV1 bottom MUSI iść do VMID, nie GND.**  
+> W single-supply cały tor sygnałowy odnosi się do VMID = V+/2. Przy bottom→GND:
+> wiper DC = 0V, U1B IN- virtual ground = VMID → stały prąd (VMID/R_in2 ≈ 2,75mA
+> @ V+=5V) przez R_in2, U1B nasycony przy KAŻDYM ustawieniu suwaka.  
+> VMID jest AC-ground przez C_VMID (fc=0,07Hz), więc AC zachowanie identyczne jak GND.
+
+### HPF — analiza (rev7)
+
+Łańcuch ma dwa etapy HPF:
+
+| Etap | C | R_eff | f_c |
+|---|---|---|---|
+| Wejście U1A | C_in=22µF | R_in1=909Ω | 7,96 Hz |
+| Wejście U1B (przy suwaku max) | C_inter=22µF | R_in2 || pot_input_Z ≈ 833Ω | 8,7 Hz |
+
+Kaskada dwóch HPF o zbliżonych f_c: łączny −3dB ≈ **12 Hz**, tłumienie @ 20 Hz ≈ **−1,8 dB**.
+S3 (25–50 Hz) i S4 (20–30 Hz) zachowane z zapasem. Nieznacznie gorsze od rev6 (−1,3 dB @ 20Hz)
+ze względu na drugą HPF na wejściu U1B — akceptowalne.
+
+### C_VMID — obowiązkowo we wszystkich wariantach
+
 VMID generowane przez dzielnik R_VMID (470kΩ||470kΩ = 235kΩ). Bez kondensatora
 odsprzęgającego tętnienie V+ sprzęga się przez VMID do wejść odwracających obu
-stopni wzmocnienia i inwertera cold (U2B). Przy 60dB wzmocnienia i PSRR MCP6004
+stopni wzmocnienia i inwertera cold (U2B). Przy 65dB wzmocnienia i PSRR MCP6004
 ~70dB @ 1kHz wpływ jest pomijalny, ale przy NF jest widoczny na niskich
 częstotliwościach (PSRR MCP6004 spada do ~40dB @ 100Hz).
 
@@ -163,7 +224,7 @@ Pobór R_pull_2 z V_raw: 9/22k = 0,409mA (zaliczany do budżetu poniżej).
 
 ### Balanced driver (końcówka wyjściowa)
 
-MCP6004: wzmacniacze 1+2 = U1A/U1B (stopnie ×33), wzmacniacze 3+4 = U2A/U2B (driver).
+MCP6004: wzmacniacze 1+2 = U1A/U1B (stopnie ×33/×55), wzmacniacze 3+4 = U2A/U2B (driver).
 
 ```
 N4 → C_out(22µF NP) → SIG_OUT
