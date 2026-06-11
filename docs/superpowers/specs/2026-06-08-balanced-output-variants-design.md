@@ -19,7 +19,8 @@ metadata:
 |---|---|
 | 1 | Pierwotny draft |
 | 2 | Korekta 3 blokerów: L→R_dc, MCP1700→MCP1703, TL072→MCP6004 |
-| 3 | Korekta błędu Thevenin V_th=24V→48V; usunięcie ślepych zaułków analizy; C_hot/cold 1µF→10µF; dokumentacja 41,5V DC na kondensatorach wyjściowych |
+| 3 | Korekta błędu Thevenin V_th=24V→48V; usunięcie ślepych zaułków analizy; C_hot/cold 1µF→10µF; dokumentacja DC na kondensatorach wyjściowych |
+| 4 | Zener 15V→9V (V_raw=15V przekraczało WM-61A Vs_max=10V); korekta V_pin=31,5V (nie 44V); R_dc 1%→0,1%; R_pull_2 33kΩ→22kΩ |
 
 ---
 
@@ -36,7 +37,7 @@ Wejście kapsuły: TS 3.5mm (tip=sygnał+zasilanie, sleeve=GND)
 ```
 
 Opcja 1: NE5532 (DIP-8), R_pull=2,2kΩ→V+.  
-Opcje 2 i 3: MCP6004 (DIP-14, quad), R_pull_2=33kΩ→V_raw.
+Opcje 2 i 3: MCP6004 (DIP-14, quad), R_pull_2=22kΩ→V_raw.
 
 ---
 
@@ -76,13 +77,15 @@ Tu R_dc idzie do węzła wyjściowego V_raw, nie do GND.)*
 **R_th = 6,81kΩ.**  
 Ze źródłami skróconymi: (R_dc1+R_ph1)||(R_dc2+R_ph2) = 13,62k||13,62k = 6,81kΩ.
 
-**I_available przy zenerze 15V:**
+**I_available przy zenerze 9V:**
 ```
-I = (V_th − V_zener) / R_th = (48 − 15) / 6,81k = 4,84 mA
+I = (V_th − V_zener) / R_th = (48 − 9) / 6,81k = 5,72 mA
 ```
 
 **Dlaczego R_dc = 6,81kΩ (dopasowanie do R_ph):**
 - Symetria R_dc = R_ph → poprawa CMRR odbiornika phantom.
+- Tolerancja **0,1%** (jak R_U2B) dla zachowania tej symetrii — ta sama filozofia
+  precyzji co w balanced driverze. Dotyczy tylko 2 rezystorów, koszt marginalny.
 - Strata audio na R_dc: op-amp (Zout≈100Ω) widzi na pinie XLR obciążenie
   10kΩ‖6,81kΩ‖6,81kΩ = 2,52kΩ → poziom audio = 2,52k/(100+2,52k) = **−0,33dB** ✓
 
@@ -92,24 +95,34 @@ Cewka izolująca 20Hz musiałaby mieć >1H — nierealny komponent DIY.
 
 ### Zener ochronny — konieczny
 
-Przy I_load→0: V_raw→48V → niszczy MCP1703 (Vin_max=16V). Zener BZX55C15 (15V)
-klamruje V_raw. Przy pełnym obciążeniu 1,18mA:
+Przy I_load→0: V_raw→48V → niszczy MCP1703 (Vin_max=16V). Zener BZX55C9V1 (9V)
+klamruje V_raw do 9V — w spec WM-61A (Vs_max=10V) z 1V zapasem.
+Przy pełnym obciążeniu 1,13mA:
 ```
-I_zener = 4,84 − 1,18 = 3,66mA,   P_zener = 15V × 3,66mA = 54,9mW  (< 500mW) ✓
-Margines prądowy: (4,84 − 1,18) / 4,84 = 76% ✓
+I_zener = 5,72 − 1,13 = 4,59mA,   P_zener = 9V × 4,59mA = 41,3mW  (< 500mW) ✓
+Margines prądowy: (5,72 − 1,13) / 5,72 = 80% ✓
 ```
+
+> **Dlaczego 9V (nie 15V):** WM-61A datasheet: Vs_max = 10V. V_raw = 15V aplikowałoby
+> 15V na drain kapsuły przez R_pull_2 — poza gwarantowanym zakresem operacji.
+> 9V daje 1V margines do limitu i jednocześnie zwiększa I_available (5,72 vs 4,84mA).
 
 ### Napięcie DC na C_hot / C_cold — krytyczne
 
-Przy I_load=1,18mA (0,59mA na gałąź):
+Prąd I_total=5,72mA dzieli się symetrycznie — 2,86mA na każdą gałąź (R_ph + R_dc):
 ```
-V_pin2 = 48 − 0,59mA × 6,81kΩ = 43,98V ≈ 44V DC (po stronie kabla/interfejsu)
+V_pin2 = 48 − 2,86mA × 6,81kΩ = 48 − 19,48 = 28,5V DC (po stronie kabla/interfejsu)
 V_op-amp_out ≈ VMID = 2,5V DC (po stronie urządzenia)
-ΔV przez C_hot / C_cold = 44 − 2,5 = 41,5V DC
+ΔV przez C_hot / C_cold = 28,5 − 2,5 = 26V DC
 ```
-> **Kondensatory C_hot i C_cold muszą być znamionowane na ≥63V.**
-> Użycie kondensatorów 25V (przy nieuwadze na etapie zakupu) kończy się natychmiastowym
-> uszkodzeniem przy pierwszym podłączeniu do interfejsu z phantom power.
+
+> **Kondensatory C_hot i C_cold muszą być znamionowane na ≥63V** (26V DC + 37V zapasu).
+> Użycie kondensatorów 25V lub 35V kończy się natychmiastowym uszkodzeniem przy
+> pierwszym podłączeniu do interfejsu z phantom power.
+>
+> *(Poprzedni draft podawał błędnie 44V / 41,5V — tamta kalkulacja uwzględniała tylko
+> I_load=1,18mA na gałąź, a pomijała I_zener=4,59mA który też płynie przez R_ph.
+> Poprawnie: I_gałąź = I_total/2 = 5,72/2 = 2,86mA.)*
 
 ### C_hot / C_cold: 10µF / 63V NP (zmiana względem draftu)
 
@@ -119,18 +132,18 @@ V_op-amp_out ≈ VMID = 2,5V DC (po stronie urządzenia)
 ### Schemat finalny — phantom receiver
 
 ```
-XLR pin2 → R_dc1(6,81kΩ, 1%) ─┐
-XLR pin3 → R_dc2(6,81kΩ, 1%) ─┴─→ V_raw
-                                     ├─ Z1: BZX55C15 (15V, 500mW) → GND
-                                     ├─ C_f1: 100µF / 25V elektrolit → GND
-                                     ├─ R_pull_2: 33kΩ → węzeł_CAP (kapsuła WM-61A)
-                                     └─ MCP1703-5002E (LDO, Vin_max=16V) → V+ = 5V
-                                          └─ C_f2: 100nF ceramiczny → GND
+XLR pin2 → R_dc1(6,81kΩ, 0,1%) ─┐
+XLR pin3 → R_dc2(6,81kΩ, 0,1%) ─┴─→ V_raw
+                                      ├─ Z1: BZX55C9V1 (9V, 500mW) → GND
+                                      ├─ C_f1: 100µF / 25V elektrolit → GND
+                                      ├─ R_pull_2: 22kΩ → węzeł_CAP (kapsuła WM-61A)
+                                      └─ MCP1703-5002E (LDO, Vin_max=16V) → V+ = 5V
+                                           └─ C_f2: 100nF ceramiczny → GND
 XLR pin1 → GND
 ```
 
-R_pull_2=33kΩ z V_raw=15V: Vdd_kapsuły = 15−0,25mA×33k = **6,75V ∈ [1V,10V]** ✓  
-Pobór R_pull_2 z V_raw: 15/33k = 0,455mA (zaliczany do budżetu poniżej).
+R_pull_2=22kΩ z V_raw=9V: Vdd_kapsuły = 9−0,25mA×22k = **3,5V ∈ [1V,10V]** ✓  
+Pobór R_pull_2 z V_raw: 9/22k = 0,409mA (zaliczany do budżetu poniżej).
 
 ### Balanced driver (końcówka wyjściowa)
 
@@ -157,25 +170,25 @@ CMRR: R_U2B_in = R_U2B_fb = 10kΩ, **0,1%** → CMRR ≥ 60dB.
 
 | Komponent | I_max |
 |---|---|
-| R_pull_2 (33kΩ, V_raw=15V) | 0,455mA |
+| R_pull_2 (22kΩ, V_raw=9V) | 0,409mA |
 | MCP6004 quad (Icc worst-case) | 0,600mA |
 | MCP1703 (LDO quiescent) | 0,120mA |
 | R_VMID (470kΩ×2, V+=5V) | 0,005mA |
-| **Razem** | **1,180mA** |
-| **I_available** | **4,840mA** |
-| **Margines worst-case** | **76%** |
+| **Razem** | **1,134mA** |
+| **I_available** | **5,720mA** |
+| **Margines worst-case** | **80%** |
 
 ### Komponenty opcji 2
 
 | Ref | Opis | Wartość |
 |-----|------|---------|
 | U1 | Quad op-amp — gain ×33/×33 + balanced driver | **MCP6004-I/P (DIP-14)** |
-| R_dc1, R_dc2 | DC tap phantom (dopasowane) | **6,81kΩ, 1%, E96** |
-| Z1 | Zener ochronny V_raw | **BZX55C15 (15V, 500mW)** |
+| R_dc1, R_dc2 | DC tap phantom (dopasowane do R_ph) | **6,81kΩ, 0,1%, E96** |
+| Z1 | Zener ochronny V_raw (Vs_max WM-61A=10V → 9V+1V zapas) | **BZX55C9V1 (9V, 500mW)** |
 | C_f1 | Bulk filter V_raw | 100µF / 25V elektrolit |
 | C_f2 | Decouple LDO | 100nF ceramiczny |
 | VR1 | LDO 5V (Vin max 16V) | **MCP1703-5002E/TO (TO-92)** |
-| R_pull_2 | Zasilanie kapsuły z V_raw | **33kΩ, 1%** |
+| R_pull_2 | Zasilanie kapsuły z V_raw=9V | **22kΩ, 1%** |
 | C_hot | DC block + sprzęganie hot | **10µF / 63V NP** elektrolit |
 | C_cold | DC block + sprzęganie cold | **10µF / 63V NP** elektrolit |
 | R_ser_hot | Izolacja wyjścia hot | 100Ω, 1% |
@@ -190,12 +203,12 @@ CMRR: R_U2B_in = R_U2B_fb = 10kΩ, **0,1%** → CMRR ≥ 60dB.
 | Parametr | Wartość |
 |---|---|
 | Zasilanie | Phantom 48V (IEC 61938) |
-| I_available z phantomu | 4,84mA |
-| I_total worst-case | 1,18mA (margines **76%**) |
-| V_raw (kapsuła + LDO_in) | 15V (zener) |
+| I_available z phantomu | 5,72mA |
+| I_total worst-case | 1,13mA (margines **80%**) |
+| V_raw (kapsuła + LDO_in) | 9V (zener BZX55C9V1, margines 1V do WM-61A Vs_max=10V) |
 | V+ (op-ampy) | 5V (MCP1703) |
-| CMRR | ≥60dB (R_U2B 0,1%) |
-| DC przez C_hot/cold | **~41,5V → min 63V rating** |
+| CMRR | ≥60dB (R_dc i R_U2B oba 0,1%) |
+| DC przez C_hot/cold | **~26V → min 63V rating** |
 | f_HPF wyjście | 1,6Hz (−0,01dB @ 20Hz) |
 | Szum op-ampa RTI | ~1µV RMS — dominuje szum kapsuły ~4µV; różnica vs NE5532: 0,2dB |
 | Max długość kabla | >50m (XLR ekranowany) |
@@ -212,9 +225,9 @@ z V_bat przed zenerem i LDO.
 ```
 Phantom: R_dc1/R_dc2 → V_raw_ph → D1(BAT85, Vf=0,3V) ─┐
 Bateria: 2×18650+BMS → V_bat                → D2(BAT85) ─┴─→ V_bus
-                                                              ├─ Z1: BZX55C15(15V)→GND
+                                                              ├─ Z1: BZX55C9V1(9V)→GND
                                                               ├─ C_bus: 100µF/25V→GND
-                                                              ├─ R_pull_2(33kΩ)→kapsuła
+                                                              ├─ R_pull_2(22kΩ)→kapsuła
                                                               └─ MCP1703→V+=5V
 TP5100 + USB-C → ładowanie baterii (niezależnie od phantom)
 ```
@@ -223,7 +236,7 @@ TP5100 + USB-C → ładowanie baterii (niezależnie od phantom)
 
 | Źródło | V_bus | LDO Vin | Margines do Vin_max=16V |
 |---|---|---|---|
-| Phantom (light load, clamped) | 15−0,3 = **14,7V** | ✓ | 1,3V |
+| Phantom (light load, clamped) | 9−0,3 = **8,7V** | ✓ | 7,3V |
 | Bateria pełna (8,4V) | 8,4−0,3 = **8,1V** | ✓ | 7,9V |
 | Bateria min (6,0V) | 6,0−0,3 = **5,7V** | dropout@1,2mA≈5mV → Vout=5,7V≈5V ✓ | 695mV |
 
