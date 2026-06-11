@@ -7,7 +7,7 @@ metadata:
 
 # Spec: Warianty wyjścia stetoskopu — TS / TRS+XLR phantom / TRS+XLR hybryda
 
-**Data:** 2026-06-08 (rev 7: 2026-06-11)**  
+**Data:** 2026-06-08 (rev 8: 2026-06-11)**  
 **Projekt:** `PapaModule/magisterka-stetoskop-diy`  
 **Status:** zweryfikowany, zatwierdzony do implementacji
 
@@ -24,20 +24,20 @@ metadata:
 | 5 | Korekta stałej V_bus_phantom 14,7V→8,7V w opisie Opt3 (stała z ery zenera 15V); Icc MCP6004 600→680µA (datasheet max @5V: 170µA/wzmacniacz×4); adnotacja o marginesie diode-OR 0,6V |
 | 6 | Dodanie C_VMID = 10µF NP do rdzenia wspólnego (odsprzęganie szyny VMID) |
 | 7 | RV1 przeniesiony między U1A a U1B (klasyczna topologia niskoszumowa); R_fb2 30,1kΩ→49,9kΩ; wzmocnienie 60→65 dB; nowe ostrzeżenie RV1 bottom→VMID; analiza HPF vs pozycja suwaka (−1,5 do −2,4 dB @ 20Hz) |
+| 8 | RV1 usunięty całkowicie — kapsuła przy ciele, clip nierealny; gain stały 65 dB; HPF stały −1,4 dB @ 20 Hz (oba stopnie f_c=7,96 Hz); wzmocnienie w interfejsie audio zastępuje trymer |
 
 ---
 
 ## Wspólny rdzeń (niezmieniony we wszystkich wariantach)
 
 ```
-WM-61A → R_pull(→V+) → C_in(22µF NP) → R_in1(909Ω) → U1A(inwert.×33, 30dB)
-       → C_inter(22µF NP) → RV1 top
-                             RV1 wiper → R_in2(909Ω) → U1B(inwert.×55, 34,8dB)
-                             RV1 bottom → VMID
+WM-61A → R_pull(→V+) → C_in(22µF NP) → R_in1(909Ω) → U1A(inwert.×33, 30,4dB)
+       → C_inter(22µF NP) → R_in2(909Ω) → U1B(inwert.×55, 34,8dB)
        → węzeł N4 (wyjście rdzenia, 65dB całkowite)
 
 Zasilanie: single-supply, VMID = V+/2
 Wejście kapsuły: TS 3.5mm (tip=sygnał+zasilanie, sleeve=GND)
+Regulacja poziomu: wyłącznie w interfejsie audio (brak trymera w preampie)
 ```
 
 Opcja 1: NE5532 (DIP-8), R_pull=2,2kΩ→V+.  
@@ -51,69 +51,48 @@ Opcje 2 i 3: MCP6004 (DIP-14, quad), R_pull_2=22kΩ→V_raw.
 | U1B (stopień 2) | 909 Ω | **49,9 kΩ, E96, 1%** | ×54,9 = 34,8 dB |
 | **Łącznie** | | | **×1817 = 65,2 dB** |
 
-Uzasadnienie 65 dB (nie 60 dB): dataset cHiFi-GAN zawiera zaszumione nagrania z tonami S3/S4
-i szmerami klas I-II (SPL ~40–55 dB). Przy 60 dB wyjście wynosiło 17–55 mV → SNR ≈14 dB
-dla najsłabszych dźwięków. Przy 65 dB: 54–173 mV → SNR ≈20 dB. Granica 70 dB wykluczona
-(clips przy typowym S1/S2 75+ dB SPL z suwnikiem na górze).
+Uzasadnienie 65 dB: dataset cHiFi-GAN zawiera zaszumione nagrania z tonami S3/S4
+i szmerami klas I-II (SPL ~40–55 dB). Przy 65 dB: V_out = 54–173 mV → SNR ≈20 dB
+dla słabych dźwięków. Clip nierealny: kapsuła WM-61A siedzi przy ciele bezpośrednio
+(w dzwonku stetoskopu) → SPL przy kapsule ograniczony do zakresu stetoskopowego
+(typowo 50–75 dB). Próg clipu: ~78 dB SPL — poza realnym zakresem zastosowania.
 
-| SPL | V_out (suwak max, pot góra) | Ocena |
+| SPL przy kapsule | V_out @ stały gain 65 dB | Ocena |
 |---|---|---|
 | 40 dB | ~29 mV | użyteczny (S3/S4 słabe) |
 | 50 dB | ~91 mV | dobry |
 | 60 dB | ~289 mV | bardzo dobry |
 | 75 dB | ~1,62 V | linia nominalna |
-| 80 dB | ~2,89 V peak | limit swing przy V+=8,4V; trim redukuje przy głośnych |
+| 78 dB | ~2,7 V peak | próg clipu (NE5532, V+=8,4V) — poza realnym zakresem |
 
-### Pozycja RV1 — między U1A a U1B
+### Brak trymera gain (uzasadnienie rev8)
 
-RV1 między stopniami to klasyczna topologia niskoszumowa. Trzy opcje porównane:
+Potencjometr gain trim usunięty. Analiza ryzyka clipu (Opus):
 
-| Pozycja RV1 | Ryzyko clippingu | Szum ścieraka amplifikowany przez | Obciążenie kapsuły |
-|---|---|---|---|
-| Przed U1A (stary projekt) | brak | **×1817 (65 dB)** | 605–1800 Ω (zależne od suwaka) |
-| **Między U1A a U1B (rev7)** | brak | **×33 (30 dB)** | 651 Ω stałe |
-| Za U1B | clipping przy 80 dB SPL | ×1 | 651 Ω stałe |
+| Źródło ryzyka | Ocena |
+|---|---|
+| Clip od dźwięków serca | Nierealny — kapsuła przy ciele, SPL ograniczony przez akustykę stetoskopu |
+| Clip od tarcia mechanicznego | Impulsowy, nie sinusoidalny — krótkookresowy, nie degraduje nagrania |
+| Regulacja poziomu | Interfejs audio (gain na wejściu LINE) — wystarczający |
 
-Obciążenie kapsuły: stare 605–1800 Ω (zależne od suwaka — przy max gain było 605 Ω).
-Nowe stałe 651 Ω — nie jest regresem, bo w typowym ustawieniu max-gain stary projekt
-i tak pracował przy 605 Ω. Nowy projekt stabilizuje obciążenie niezależnie od suwaka.
+Usunięcie trymera eliminuje:
+- Ryzyko błędu okablowania (RV1 bottom → VMID, krytyczny dla single-supply)
+- Szum mechaniczny ścieraka podczas nagrania
+- Zmienność HPF w zależności od pozycji suwaka (−1,5 do −2,4 dB przy suwaku)
 
-Użytkownik reguluje suwak podczas nagrania (między pacjentami), więc szum mechaniczny
-ścieraka musi być minimalizowany. Amplifikacja ×33 zamiast ×1817 = **34,8 dB redukcji
-szumu ścieraka**.
+### HPF — analiza (rev8)
 
-> **KRYTYCZNE: RV1 bottom MUSI iść do VMID, nie GND.**  
-> W single-supply cały tor sygnałowy odnosi się do VMID = V+/2. Przy bottom→GND:
-> wiper DC = 0V, U1B IN- virtual ground = VMID → stały prąd (VMID/R_in2 ≈ 2,75mA
-> @ V+=5V) przez R_in2, U1B nasycony przy KAŻDYM ustawieniu suwaka.  
-> VMID jest AC-ground przez C_VMID (fc=0,07Hz), więc AC zachowanie identyczne jak GND.
-
-### HPF — analiza (rev7)
-
-Łańcuch ma dwa etapy HPF. Etap 1 (C_in/R_in1) jest stały. Etap 2 (C_inter/R_eff_wejście_U1B)
-**zależy od pozycji suwaka RV1** — impedancja wejścia U1B zmienia się z pozycją wiper.
+Bez trymera oba stopnie mają **identyczne parametry HPF**:
 
 | Etap | C | R_eff | f_c |
 |---|---|---|---|
-| Wejście U1A (stały) | C_in=22µF | R_in1=909Ω | 7,96 Hz |
-| Wejście U1B (suwak max, α=1) | C_inter=22µF | 833Ω | 8,7 Hz |
-| Wejście U1B (suwak środek, α=0,5) | C_inter=22µF | 665Ω | 10,9 Hz |
-| Wejście U1B (suwak min, α→0) | C_inter=22µF | ~480Ω | 15 Hz |
+| Wejście U1A | C_in = 22µF | R_in1 = 909 Ω | 7,96 Hz |
+| Wejście U1B | C_inter = 22µF | R_in2 = 909 Ω | 7,96 Hz |
 
-Tłumienie @ 20 Hz w zależności od pozycji suwaka:
-
-| Pozycja RV1 | f_c2 | Tłumienie @ 20 Hz |
-|---|---|---|
-| Max gain (suwak górny) | 8,7 Hz | **−1,5 dB** |
-| Środek | 10,9 Hz | **−1,8 dB** |
-| ¼ zakresu | 11,8 Hz | **−1,9 dB** |
-| Min gain (suwak dolny) | ~15 Hz | **−2,4 dB** |
-
-> **Praktyczna konsekwencja:** przy obniżeniu gain (suwak w dół — dla głośnych pacjentów)
-> jednocześnie nieznacznie zwiększa się tłumienie S4 (20–30 Hz). Różnica 1,5→2,4 dB
-> to 0,9 dB w skrajnych przypadkach — akceptowalne dla cHiFi-GAN SR=4kHz. S3/S4
-> zachowane we wszystkich pozycjach suwaka. Dla najczystszych tonów niskich — suwak
-> na górze (max gain) i redukcja gain w interfejsie, nie przez RV1.
+Kaskada dwóch identycznych HPF: łączny −3 dB = 7,96 × √2 ≈ **11,3 Hz**,
+tłumienie @ 20 Hz = **−1,4 dB (stały, niezależny od żadnej regulacji)**.
+S3 (25–50 Hz) i S4 (20–30 Hz) zachowane. Poprawa względem rev7 (−1,5 do −2,4 dB
+zależnie od suwaka) — HPF jest teraz przewidywalny i nie zmienia się w trakcie nagrania.
 
 ### C_VMID — obowiązkowo we wszystkich wariantach
 
